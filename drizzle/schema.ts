@@ -447,3 +447,70 @@ export const shippingLabels = mysqlTable("shippingLabels", {
 
 export type ShippingLabel = typeof shippingLabels.$inferSelect;
 export type InsertShippingLabel = typeof shippingLabels.$inferInsert;
+
+
+// Membership Tiers (会员等级)
+export const membershipTiers = mysqlTable("membershipTiers", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(), // 普通会员, 银牌, 金牌, 钻石
+  level: int("level").notNull().unique(), // 1, 2, 3, 4 (higher = better)
+  description: text("description"),
+  minAnnualPurchase: int("minAnnualPurchase").notNull().default(0), // in cents, minimum annual purchase to qualify
+  discountPercentage: int("discountPercentage").notNull().default(0), // 0-100, discount on all products
+  additionalBenefits: text("additionalBenefits"), // JSON array of benefits
+  color: varchar("color", { length: 20 }).default("#999999"), // For UI display
+  icon: varchar("icon", { length: 100 }), // Icon name or URL
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type MembershipTier = typeof membershipTiers.$inferSelect;
+export type InsertMembershipTier = typeof membershipTiers.$inferInsert;
+
+// User Memberships (用户会员信息)
+export const userMemberships = mysqlTable("userMemberships", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(),
+  tierId: int("tierId").notNull(), // Foreign key to membershipTiers
+  annualPurchaseAmount: int("annualPurchaseAmount").notNull().default(0), // in cents
+  joinedAt: timestamp("joinedAt").defaultNow().notNull(),
+  upgradedAt: timestamp("upgradedAt"),
+  expiresAt: timestamp("expiresAt"), // Membership expiry date
+  isActive: int("isActive").default(1), // 0 or 1
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type UserMembership = typeof userMemberships.$inferSelect;
+export type InsertUserMembership = typeof userMemberships.$inferInsert;
+
+// Membership Discounts (会员等级价格折扣)
+export const membershipDiscounts = mysqlTable("membershipDiscounts", {
+  id: int("id").autoincrement().primaryKey(),
+  tierId: int("tierId").notNull(), // Foreign key to membershipTiers
+  productId: int("productId"), // null means applies to all products
+  categoryId: int("categoryId"), // null means applies to all categories
+  discountPercentage: int("discountPercentage").notNull(), // 0-100
+  discountAmount: int("discountAmount").default(0), // in cents, fixed discount
+  validFrom: timestamp("validFrom").defaultNow(),
+  validUntil: timestamp("validUntil"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type MembershipDiscount = typeof membershipDiscounts.$inferSelect;
+export type InsertMembershipDiscount = typeof membershipDiscounts.$inferInsert;
+
+// Membership History (会员升级历史)
+export const membershipHistory = mysqlTable("membershipHistory", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  fromTierId: int("fromTierId"), // null if first membership
+  toTierId: int("toTierId").notNull(),
+  reason: varchar("reason", { length: 255 }), // "automatic_upgrade", "manual_upgrade", "downgrade", etc.
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type MembershipHistory = typeof membershipHistory.$inferSelect;
+export type InsertMembershipHistory = typeof membershipHistory.$inferInsert;

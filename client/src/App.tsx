@@ -15,6 +15,7 @@ import Orders from "./pages/Orders";
 import BulkQuoteRequest from "./pages/BulkQuoteRequest";
 import QuoteManagement from "./pages/QuoteManagement";
 import Legal from "./pages/Legal";
+import MembershipTiers from "./pages/MembershipTiers";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -31,6 +32,7 @@ function Router() {
       <Route path={"/bulk-quote-request"} component={BulkQuoteRequest} />
       <Route path={"/quote-management"} component={QuoteManagement} />
       <Route path={"/legal"} component={Legal} />
+      <Route path={"/membership"} component={MembershipTiers} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

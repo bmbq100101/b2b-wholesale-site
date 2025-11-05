@@ -1,4 +1,4 @@
-import { eq, ne, lt, and, sql } from "drizzle-orm";
+import { eq, ne, lt, and, sql, gte, lte, isNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { 
   InsertUser,
@@ -13,6 +13,10 @@ import {
   orders,
   orderItems,
   invoices,
+  membershipTiers,
+  userMemberships,
+  membershipDiscounts,
+  membershipHistory,
   type User,
   type Product,
   type Category,
@@ -25,7 +29,15 @@ import {
   type OrderItem,
   type InsertOrderItem,
   type Invoice,
-  type InsertInvoice
+  type InsertInvoice,
+  type MembershipTier,
+  type InsertMembershipTier,
+  type UserMembership,
+  type InsertUserMembership,
+  type MembershipDiscount,
+  type InsertMembershipDiscount,
+  type MembershipHistory,
+  type InsertMembershipHistory
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -586,3 +598,131 @@ import {
   type InsertFaqCategory,
   type InsertFaqItem,
 } from "../drizzle/schema";
+
+
+// Membership System Queries
+// Get user's current membership
+export async function getUserMembership(userId: number): Promise<(UserMembership & { tier: MembershipTier }) | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db
+    .select({
+      membership: userMemberships,
+      tier: membershipTiers,
+    })
+    .from(userMemberships)
+    .innerJoin(membershipTiers, eq(userMemberships.tierId, membershipTiers.id))
+    .where(eq(userMemberships.userId, userId))
+    .limit(1);
+
+  if (result.length === 0) return undefined;
+  
+  const { membership, tier } = result[0];
+  return { ...membership, tier } as any;
+}
+
+// Get all membership tiers
+export async function getMembershipTiers(): Promise<MembershipTier[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db.select().from(membershipTiers).orderBy(membershipTiers.level);
+}
+
+// Get membership tier by ID
+export async function getMembershipTier(tierId: number): Promise<MembershipTier | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db.select().from(membershipTiers).where(eq(membershipTiers.id, tierId)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+// Create or update user membership
+export async function upsertUserMembership(membership: InsertUserMembership): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  await db.insert(userMemberships).values(membership).onDuplicateKeyUpdate({
+    set: {
+      tierId: membership.tierId,
+      annualPurchaseAmount: membership.annualPurchaseAmount,
+      upgradedAt: membership.upgradedAt,
+      expiresAt: membership.expiresAt,
+      isActive: membership.isActive,
+      updatedAt: new Date(),
+    },
+  });
+}
+
+// Get applicable discounts for user and product
+export async function getApplicableDiscount(userId: number, productId: number, categoryId: number): Promise<MembershipDiscount | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const userMembership = await getUserMembership(userId);
+  if (!userMembership) return undefined;
+
+  const now = new Date();
+  const result = await db
+    .select()
+    .from(membershipDiscounts)
+    .where(
+      and(
+        eq(membershipDiscounts.tierId, userMembership.tierId),
+        and(
+          or(
+            isNull(membershipDiscounts.productId),
+            eq(membershipDiscounts.productId, productId)
+          ),
+          or(
+            isNull(membershipDiscounts.categoryId),
+            eq(membershipDiscounts.categoryId, categoryId)
+          )
+        ),
+        or(
+          isNull(membershipDiscounts.validFrom),
+          lte(membershipDiscounts.validFrom, now)
+        ),
+        or(
+          isNull(membershipDiscounts.validUntil),
+          gte(membershipDiscounts.validUntil, now)
+        )
+      )
+    )
+    .limit(1);
+
+  return result.length > 0 ? result[0] : undefined;
+}
+
+// Add membership history record
+export async function addMembershipHistory(history: InsertMembershipHistory): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  await db.insert(membershipHistory).values(history);
+}
+
+// Check if user qualifies for upgrade
+export async function checkMembershipUpgrade(userId: number): Promise<MembershipTier | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const userMembership = await getUserMembership(userId);
+  if (!userMembership) return undefined;
+
+  // Find next tier based on annual purchase amount
+  const tiers = await getMembershipTiers();
+  const nextTier = tiers.find(
+    tier => tier.level > userMembership.tier.level && 
+    userMembership.annualPurchaseAmount >= tier.minAnnualPurchase
+  );
+
+  return nextTier;
+}
+
+// Helper function for OR conditions
+function or(...conditions: any[]) {
+  return conditions.reduce((acc, cond) => acc || cond);
+}

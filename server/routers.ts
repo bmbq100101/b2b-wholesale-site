@@ -1039,6 +1039,31 @@ export const appRouter = router({
         }
       }),
   }),
+
+  // Membership system routes
+  membership: router({
+    getTiers: publicProcedure.query(async () => {
+      const { getMembershipTiers } = await import("./db");
+      return await getMembershipTiers();
+    }),
+
+    getUserMembership: protectedProcedure.query(async ({ ctx }) => {
+      const { getUserMembership } = await import("./db");
+      return await getUserMembership(ctx.user.id);
+    }),
+
+    getApplicableDiscount: protectedProcedure
+      .input(z.object({ productId: z.number(), categoryId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        const { getApplicableDiscount } = await import("./db");
+        return await getApplicableDiscount(ctx.user.id, input.productId, input.categoryId);
+      }),
+
+    checkUpgrade: protectedProcedure.query(async ({ ctx }) => {
+      const { checkMembershipUpgrade } = await import("./db");
+      return await checkMembershipUpgrade(ctx.user.id);
+    }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;
