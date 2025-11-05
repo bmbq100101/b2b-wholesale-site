@@ -1,4 +1,3 @@
-import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,8 +6,11 @@ import { trpc } from "@/lib/trpc";
 import { ArrowRight, CheckCircle, Globe, Shield, Zap, Users, Package, TrendingUp } from "lucide-react";
 import { Link } from "wouter";
 import { HeroCarousel } from "@/components/HeroCarousel";
+import { useLanguage, t } from "@/components/LanguageSwitcher";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 export default function Home() {
+  const language = useLanguage();
   const { user, isAuthenticated } = useAuth();
   const { data: featuredProducts = [] } = trpc.products.featured.useQuery();
   const { data: categories = [] } = trpc.categories.list.useQuery();
@@ -60,16 +62,16 @@ export default function Home() {
           </div>
           <nav className="hidden md:flex items-center gap-8">
             <Link href="/products" className="text-slate-600 hover:text-slate-900 font-medium">
-              Products
+              {t("nav.products", language)}
             </Link>
             <Link href="/about" className="text-slate-600 hover:text-slate-900 font-medium">
-              About Us
+              {t("nav.about", language)}
             </Link>
             <Link href="/certifications" className="text-slate-600 hover:text-slate-900 font-medium">
-              Certifications
+              {t("nav.certifications", language)}
             </Link>
             <Link href="/contact" className="text-slate-600 hover:text-slate-900 font-medium">
-              Contact
+              {t("nav.contact", language)}
             </Link>
           </nav>
           <div className="flex items-center gap-4">
@@ -78,7 +80,7 @@ export default function Home() {
                 <span className="text-sm text-slate-600">{user?.name || "User"}</span>
                 <Link href="/dashboard">
                   <Button variant="outline" size="sm">
-                    Dashboard
+                    {t("nav.dashboard", language)}
                   </Button>
                 </Link>
               </div>
@@ -99,20 +101,20 @@ export default function Home() {
         <div className="container mx-auto text-center">
           <Badge className="mb-4 bg-blue-400 text-blue-900">B2B Wholesale Platform</Badge>
           <h2 className="text-5xl font-bold mb-6 leading-tight">
-            Premium Surplus Goods from Dongguan
+            {t("hero.title", language)}
           </h2>
           <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-            Direct wholesale supplier of stock digital products, brand small appliances, home kitchen supplies, and cleaning products. Trusted by international distributors and retailers.
+            {t("hero.subtitle", language)}
           </p>
           <div className="flex gap-4 justify-center flex-wrap">
             <Link href="/products">
               <Button size="lg" variant="secondary" className="gap-2">
-                Browse Products <ArrowRight className="w-5 h-5" />
+                {t("hero.browse", language)} <ArrowRight className="w-5 h-5" />
               </Button>
             </Link>
             <a href={isAuthenticated ? undefined : getLoginUrl()}>
               <Button size="lg" variant="outline" className="gap-2 bg-white text-blue-600 border-white hover:bg-blue-50">
-                Request Quote <Zap className="w-5 h-5" />
+                {t("hero.quote", language)} <Zap className="w-5 h-5" />
               </Button>
             </a>
           </div>
