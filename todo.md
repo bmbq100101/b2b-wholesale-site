@@ -1,130 +1,146 @@
 # B2B Wholesale Surplus Goods Platform - TODO
 
-## Architecture & Database Schema
-- [x] Design database schema for products, categories, suppliers, and pricing tiers
-- [x] Create tables for user roles (buyer, supplier, admin)
-- [x] Implement product condition grading system (A/B/C grades)
-- [x] Set up pricing tiers and MOQ (Minimum Order Quantity) system
+## Phase 1: Inquiry Optimization, Bulk Upload, FAQ & Multilingual Support
 
-## Homepage & Navigation
-- [x] Design professional B2B homepage with trust indicators
-- [x] Create main navigation structure (Products, Suppliers, About, Contact, RFQ)
-- [x] Implement header with logo, search bar, and user authentication links
-- [x] Add footer with company info, certifications, and quick links
-- [x] Create responsive mobile navigation
+### 技能 1: 优化在线询盘功能
+- [ ] 邮件自动带上产品型号和页面链接
+- [ ] 建立短信+邮件双重提醒机制
+- [ ] 创建询盘通知模板
+- [ ] 实现SMS提醒集成
 
-## Product Catalog System
-- [x] Build product listing page with filtering (category, price, condition, MOQ)
-- [x] Create product detail page with multi-angle images
-- [x] Implement product specifications and parameters display
-- [x] Add inventory/stock quantity display
-- [x] Create product search functionality
+### 技能 2: 完善产品上传功能
+- [ ] 开发产品批量上传功能
+- [ ] 支持CSV/Excel导入
+- [ ] 批量图片上传处理
+- [ ] 上传进度跟踪
 
-## Pricing & Hidden Pricing System
-- [x] Implement hidden pricing (visible only to registered/verified buyers)
-- [x] Create tiered pricing display based on order quantity
-- [x] Build MOQ (Minimum Order Quantity) selection interface
-- [x] Add pricing calculation based on quantity selection
+### 技能 3: 整合客户FAQ问答库
+- [ ] 创建FAQ数据库表
+- [ ] 开发FAQ管理后台
+- [ ] 构建FAQ前端展示页面
+- [ ] 实现FAQ搜索功能
 
-## RFQ (Request for Quote) System
-- [x] Design RFQ form with product selection
-- [x] Create RFQ submission and tracking system
-- [x] Build RFQ history page for users
-- [ ] Implement email notifications for RFQ submissions
-- [ ] Create admin panel for managing RFQ inquiries
+### 技能 6: 设计悬浮多语言切换器
+- [ ] 支持6种语言（英文、西班牙文、俄文、中文、阿拉伯语、葡萄牙语）
+- [ ] 实现IP地址自动定位语言
+- [ ] 设计悬浮语言切换器UI
+- [ ] 实现RTL（从右到左）支持用于阿拉伯语
+- [ ] 多语言内容管理系统
 
-## Trust & Certification Pages
-- [ ] Create "About Us" page with company background
-- [x] Build "Certifications" page (CE, FCC, etc.)
-- [ ] Add factory/facility images gallery
-- [x] Create "Quality Assurance" page with inspection process
-- [x] Build "Warranty & Return Policy" page
-- [ ] Add customer testimonials/case studies section
-- [x] Create "Why Choose Us" section with key differentiators
+---
 
-## User Authentication & Profiles
-- [ ] Implement buyer registration and verification workflow
-- [ ] Create user profile management page
-- [ ] Build company information form for B2B buyers
-- [ ] Implement role-based access control (buyer, supplier, admin)
-- [ ] Add email verification for new accounts
+## Phase 2: Social Media Integration, Hero Section, Payment Methods & Compliance
 
-## Multi-Language Support
-- [ ] Set up language switching infrastructure
-- [ ] Translate all content to English (primary)
-- [ ] Translate content to Spanish
-- [ ] Translate content to Russian
-- [ ] Implement language-specific currency display
+### 技能 4: 实现社媒与邮箱对接及产品分享
+- [ ] 集成Facebook、Instagram、LinkedIn分享
+- [ ] 集成Twitter/X分享
+- [ ] 集成WhatsApp分享
+- [ ] 企业邮箱对接
+- [ ] 产品一键分享功能
 
-## Admin Dashboard
-- [ ] Create admin panel for managing products
-- [ ] Build product upload/bulk import functionality
-- [ ] Implement RFQ management interface
-- [ ] Create user management dashboard
-- [ ] Add analytics/reporting section
+### 技能 5: 优化首屏展示
+- [ ] 实现轮播图/视频功能
+- [ ] 添加视频自动播放控制
+- [ ] 响应式设计优化
+- [ ] 加载性能优化
 
-## Advanced Features
-- [ ] Implement wishlist/saved products functionality
-- [ ] Create product comparison tool
-- [ ] Build bulk order cart system
-- [ ] Add order history for registered users
-- [ ] Implement communication/messaging system between buyers and suppliers
+### 技能 10: 制定支付组合方案
+- [ ] 欧美客户：Stripe + PayPal支付组合
+- [ ] 中东客户：Checkout.com + 当地COD
+- [ ] 拉美客户：Mercado Pago + 跨境人民币
+- [ ] 支付网关集成与测试
+- [ ] 多币种支持
 
-## SEO & Performance
-- [ ] Optimize meta tags and descriptions
-- [ ] Implement structured data (Schema.org)
-- [ ] Create XML sitemap
-- [ ] Optimize image loading and caching
-- [ ] Implement lazy loading for product images
+### 技能 12: 确保法律合规
+- [ ] GDPR合规弹窗与Cookie管理
+- [ ] 自动生成隐私政策
+- [ ] 自动生成服务条款
+- [ ] SSL加密配置
+- [ ] PCI-DSS认证准备
 
-## Testing & Deployment
-- [ ] Test responsive design across devices
-- [ ] Verify all forms and submission workflows
-- [ ] Test multi-language functionality
-- [ ] Performance testing and optimization
-- [ ] Security audit and SSL implementation
-- [ ] Create checkpoint for deployment
+---
 
+## Phase 3: Tariff Calculator, Sample System, Heatmap, Logistics & SEO
 
-## Stripe Payment Integration
-- [x] Set up Stripe account and API keys
-- [x] Create payment intent system for orders
-- [x] Build checkout page with Stripe Elements
-- [x] Implement order management system
-- [x] Create payment confirmation and receipt system
-- [ ] Add webhook handling for payment events
-- [ ] Implement refund processing
-- [x] Create payment history page for users
+### 技能 7: 开发智能关税计算器
+- [ ] 创建关税数据库
+- [ ] 实现关税计算逻辑
+- [ ] 支持多国关税查询
+- [ ] 构建计算器UI
+- [ ] 实时汇率集成
 
+### 技能 8: 搭建样品申请系统
+- [ ] 样品申请表单设计
+- [ ] 自动生成形式发票（PI）
+- [ ] 自动生成物流单
+- [ ] 样品申请管理后台
+- [ ] 邮件确认机制
 
-## Advanced RFQ & Bulk Quote Management
-- [x] Create enhanced RFQ form with multiple product selection
-- [x] Build quote comparison interface for customers
-- [x] Implement quote expiration and versioning system
-- [x] Add quote approval workflow
-- [ ] Create admin dashboard for managing RFQs and quotes
-- [x] Implement quote-to-order conversion
-- [ ] Add email notifications for RFQ status updates
-- [ ] Create quote PDF generation and download
-- [ ] Implement quote history and analytics
+### 技能 9: 生成访客行为热力图
+- [ ] 集成热力图追踪工具
+- [ ] 页面点击热力图
+- [ ] 滚动行为分析
+- [ ] 用户交互数据收集
+- [ ] 热力图可视化仪表板
 
+### 技能 11: 规划物流方案推荐
+- [ ] 小包专线：云途物流集成
+- [ ] 大货海运：Flexport对接
+- [ ] 海外仓：Amazon FBA同步
+- [ ] 物流方案推荐引擎
+- [ ] 运费计算器
 
-## Live Chat Integration
-- [x] Design and implement live chat database schema
-- [x] Create chat message tRPC procedures
-- [x] Build live chat UI component
-- [x] Integrate chat into quote request page
-- [ ] Add support agent notification system
-- [x] Implement message persistence and history
-- [ ] Add typing indicators and read receipts
-- [x] Create chat availability status
+### 技能 13: 执行SEO关键操作
+- [ ] 多语言Hreflang标记
+- [ ] 产品Schema结构化数据
+- [ ] 博客自动翻译发布
+- [ ] 长尾关键词覆盖
+- [ ] SEO性能监测
 
+---
 
-## Chat Email Transcripts
-- [x] Create email template for chat transcripts
-- [x] Implement email sending service integration
-- [x] Add transcript generation from chat messages
-- [x] Send email on chat session closure
-- [ ] Add user email preferences for transcripts
-- [x] Create transcript formatting with timestamps
-- [ ] Test email delivery and formatting
+## 已完成的功能
+
+### 核心功能
+- [x] 数据库架构设计
+- [x] 用户认证系统
+- [x] 产品展示系统
+- [x] 产品详情页面
+- [x] 产品搜索和过滤
+
+### 询盘与报价
+- [x] RFQ系统
+- [x] 询盘管理页面
+- [x] 报价管理系统
+- [x] 报价转订单功能
+
+### 支付与订单
+- [x] Stripe支付集成
+- [x] 订单管理系统
+- [x] 订单历史页面
+- [x] 发票生成
+
+### 客户支持
+- [x] 实时聊天系统
+- [x] 聊天记录保存
+- [x] 聊天邮件转录
+- [x] 支持代理管理
+
+### 信任与认证
+- [x] 认证页面
+- [x] 公司信息展示
+- [x] 产品条件分级系统
+- [x] 定价层级系统
+
+---
+
+## 项目统计
+
+**总功能数**: 13项优化技能 + 核心功能
+**已完成**: 核心功能 + 聊天系统
+**进行中**: Phase 1 优化
+**待实施**: Phase 2 & Phase 3
+
+**支持语言**: 6种（英文、西班牙文、俄文、中文、阿拉伯语、葡萄牙语）
+**支持币种**: 多币种
+**支付网关**: Stripe + 其他网关（待集成）

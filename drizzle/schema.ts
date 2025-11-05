@@ -297,3 +297,85 @@ export const supportAgents = mysqlTable("supportAgents", {
 
 export type SupportAgent = typeof supportAgents.$inferSelect;
 export type InsertSupportAgent = typeof supportAgents.$inferInsert;
+
+
+// Inquiry Notifications System
+export const inquiryNotifications = mysqlTable("inquiryNotifications", {
+  id: int("id").autoincrement().primaryKey(),
+  inquiryId: int("inquiryId").notNull(),
+  productId: int("productId").notNull(),
+  productName: varchar("productName", { length: 255 }).notNull(),
+  productSku: varchar("productSku", { length: 100 }),
+  pageUrl: varchar("pageUrl", { length: 500 }),
+  customerEmail: varchar("customerEmail", { length: 255 }).notNull(),
+  customerPhone: varchar("customerPhone", { length: 20 }),
+  emailSent: boolean("emailSent").default(false),
+  smsSent: boolean("smsSent").default(false),
+  emailSentAt: timestamp("emailSentAt"),
+  smsSentAt: timestamp("smsSentAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type InquiryNotification = typeof inquiryNotifications.$inferSelect;
+export type InsertInquiryNotification = typeof inquiryNotifications.$inferInsert;
+
+// SMS Configuration
+export const smsConfig = mysqlTable("smsConfig", {
+  id: int("id").autoincrement().primaryKey(),
+  provider: varchar("provider", { length: 50 }).notNull(), // twilio, aws-sns, etc
+  apiKey: varchar("apiKey", { length: 500 }).notNull(),
+  apiSecret: varchar("apiSecret", { length: 500 }),
+  phoneNumber: varchar("phoneNumber", { length: 20 }).notNull(),
+  enabled: boolean("enabled").default(true),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SmsConfig = typeof smsConfig.$inferSelect;
+export type InsertSmsConfig = typeof smsConfig.$inferInsert;
+
+
+// FAQ Categories
+export const faqCategories = mysqlTable("faqCategories", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  slug: varchar("slug", { length: 100 }).notNull().unique(),
+  description: text("description"),
+  order: int("order").default(0),
+  isActive: boolean("isActive").default(true),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type FaqCategory = typeof faqCategories.$inferSelect;
+export type InsertFaqCategory = typeof faqCategories.$inferInsert;
+
+// FAQ Items
+export const faqItems = mysqlTable("faqItems", {
+  id: int("id").autoincrement().primaryKey(),
+  categoryId: int("categoryId").notNull(),
+  question: varchar("question", { length: 500 }).notNull(),
+  answer: text("answer").notNull(),
+  order: int("order").default(0),
+  views: int("views").default(0),
+  helpful: int("helpful").default(0), // Count of helpful votes
+  notHelpful: int("notHelpful").default(0), // Count of not helpful votes
+  isActive: boolean("isActive").default(true),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type FaqItem = typeof faqItems.$inferSelect;
+export type InsertFaqItem = typeof faqItems.$inferInsert;
+
+// FAQ Search Index (for full-text search)
+export const faqSearchIndex = mysqlTable("faqSearchIndex", {
+  id: int("id").autoincrement().primaryKey(),
+  faqItemId: int("faqItemId").notNull(),
+  searchText: text("searchText"), // Denormalized search text
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type FaqSearchIndex = typeof faqSearchIndex.$inferSelect;
+export type InsertFaqSearchIndex = typeof faqSearchIndex.$inferInsert;

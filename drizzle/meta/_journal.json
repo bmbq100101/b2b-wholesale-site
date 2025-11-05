@@ -36,6 +36,20 @@
       "when": 1762336853509,
       "tag": "0004_lush_fabian_cortez",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1762347989426,
+      "tag": "0005_black_monster_badoon",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1762348244711,
+      "tag": "0006_nosy_squadron_supreme",
+      "breakpoints": true
     }
   ]
 }

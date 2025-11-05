@@ -1,7 +1,8 @@
 import { eq, ne, lt, and, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { 
-  InsertUser, 
+  InsertUser,
+  InsertProduct,
   users,
   categories, 
   products, 
@@ -453,3 +454,135 @@ export async function getSupportAgentName(agentId: number): Promise<string | und
   const result = await db.select().from(supportAgents).where(eq(supportAgents.id, agentId)).limit(1);
   return result.length > 0 ? result[0].name : undefined;
 }
+
+
+// Inquiry Notification queries
+export async function createInquiryNotification(notification: InsertInquiryNotification): Promise<InquiryNotification | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  try {
+    await db.insert(inquiryNotifications).values(notification);
+    const result = await db.select().from(inquiryNotifications).where(eq(inquiryNotifications.inquiryId, notification.inquiryId)).orderBy(inquiryNotifications.id).limit(1);
+    return result.length > 0 ? result[0] : undefined;
+  } catch (error) {
+    console.error("[Database] Failed to create inquiry notification:", error);
+    return undefined;
+  }
+}
+
+export async function updateInquiryNotificationEmailStatus(notificationId: number, sent: boolean): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(inquiryNotifications).set({ emailSent: sent, emailSentAt: sent ? new Date() : undefined }).where(eq(inquiryNotifications.id, notificationId));
+}
+
+export async function updateInquiryNotificationSMSStatus(notificationId: number, sent: boolean): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(inquiryNotifications).set({ smsSent: sent, smsSentAt: sent ? new Date() : undefined }).where(eq(inquiryNotifications.id, notificationId));
+}
+
+import {
+  inquiryNotifications,
+  type InquiryNotification,
+  type InsertInquiryNotification,
+} from "../drizzle/schema";
+
+
+// Create product
+export async function createProduct(product: InsertProduct): Promise<Product | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  try {
+    await db.insert(products).values(product);
+    const result = await db.select().from(products).where(eq(products.sku, product.sku)).limit(1);
+    return result.length > 0 ? result[0] : undefined;
+  } catch (error) {
+    console.error("[Database] Failed to create product:", error);
+    return undefined;
+  }
+}
+
+
+
+
+// FAQ Queries
+export async function getFaqCategories(): Promise<FaqCategory[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(faqCategories).where(eq(faqCategories.isActive, true)).orderBy(faqCategories.order);
+}
+
+export async function getFaqItemsByCategory(categoryId: number): Promise<FaqItem[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(faqItems).where(and(eq(faqItems.categoryId, categoryId), eq(faqItems.isActive, true))).orderBy(faqItems.order);
+}
+
+export async function searchFaqItems(searchQuery: string): Promise<FaqItem[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const query = `%${searchQuery}%`;
+  return db.select().from(faqItems).where(and(eq(faqItems.isActive, true), sql`MATCH(question, answer) AGAINST(${searchQuery} IN BOOLEAN MODE)`));
+}
+
+export async function getFaqItemById(id: number): Promise<FaqItem | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(faqItems).where(eq(faqItems.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function updateFaqItemViews(id: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(faqItems).set({ views: sql`views + 1` }).where(eq(faqItems.id, id));
+}
+
+export async function updateFaqItemHelpful(id: number, helpful: boolean): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  
+  if (helpful) {
+    await db.update(faqItems).set({ helpful: sql`helpful + 1` }).where(eq(faqItems.id, id));
+  } else {
+    await db.update(faqItems).set({ notHelpful: sql`notHelpful + 1` }).where(eq(faqItems.id, id));
+  }
+}
+
+export async function createFaqCategory(category: InsertFaqCategory): Promise<FaqCategory | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  try {
+    await db.insert(faqCategories).values(category);
+    const result = await db.select().from(faqCategories).where(eq(faqCategories.slug, category.slug)).limit(1);
+    return result.length > 0 ? result[0] : undefined;
+  } catch (error) {
+    console.error("[Database] Failed to create FAQ category:", error);
+    return undefined;
+  }
+}
+
+export async function createFaqItem(item: InsertFaqItem): Promise<FaqItem | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  try {
+    await db.insert(faqItems).values(item);
+    const result = await db.select().from(faqItems).where(eq(faqItems.question, item.question)).limit(1);
+    return result.length > 0 ? result[0] : undefined;
+  } catch (error) {
+    console.error("[Database] Failed to create FAQ item:", error);
+    return undefined;
+  }
+}
+
+import {
+  faqCategories,
+  faqItems,
+  faqSearchIndex,
+  type FaqCategory,
+  type FaqItem,
+  type InsertFaqCategory,
+  type InsertFaqItem,
+} from "../drizzle/schema";

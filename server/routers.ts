@@ -550,6 +550,247 @@ export const appRouter = router({
         return getUserActiveChatSession(ctx.user.id);
       }),
   }),
+
+  // Inquiry Notifications
+  inquiries: router({
+    sendInquiryNotification: protectedProcedure
+      .input(z.object({
+        inquiryId: z.number(),
+        productId: z.number(),
+        productName: z.string(),
+        productSku: z.string().optional(),
+        pageUrl: z.string().optional(),
+        customerEmail: z.string().email(),
+        customerPhone: z.string().optional(),
+        sendEmail: z.boolean().default(true),
+        sendSMS: z.boolean().default(true),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { createInquiryNotification, updateInquiryNotificationEmailStatus, updateInquiryNotificationSMSStatus } = await import("./db");
+        const { sendInquiryEmail, sendInquirySMS } = await import("./inquiry-notification-service");
+
+        try {
+          // Create notification record
+          const notification = await createInquiryNotification({
+            inquiryId: input.inquiryId,
+            productId: input.productId,
+            productName: input.productName,
+            productSku: input.productSku,
+            pageUrl: input.pageUrl,
+            customerEmail: input.customerEmail,
+            customerPhone: input.customerPhone,
+          });
+
+          if (!notification) {
+            throw new Error("Failed to create notification record");
+          }
+
+          // Send email if requested
+          if (input.sendEmail) {
+            const emailSent = await sendInquiryEmail({
+              customerName: ctx.user.name || "Valued Customer",
+              customerEmail: input.customerEmail,
+              productName: input.productName,
+              productSku: input.productSku,
+              pageUrl: input.pageUrl,
+            });
+
+            if (emailSent) {
+              await updateInquiryNotificationEmailStatus(notification.id, true);
+            }
+          }
+
+          // Send SMS if requested and phone provided
+          if (input.sendSMS && input.customerPhone) {
+            const smsSent = await sendInquirySMS({
+              customerPhone: input.customerPhone,
+              productName: input.productName,
+              productSku: input.productSku,
+            });
+
+            if (smsSent) {
+              await updateInquiryNotificationSMSStatus(notification.id, true);
+            }
+          }
+
+          return {
+            success: true,
+            notificationId: notification.id,
+            emailSent: notification.emailSent,
+            smsSent: notification.smsSent,
+          };
+        } catch (error) {
+          console.error("[Inquiry] Error sending notification:", error);
+          throw new Error("Failed to send inquiry notification");
+        }
+      }),
+  }),
+
+  // Bulk Product Upload
+  bulkUpload: router({
+    uploadCSV: protectedProcedure
+      .input(z.object({
+        csvContent: z.string(),
+        categoryId: z.number(),
+        conditionGrade: z.string().refine((val) => ["A", "B", "C"].includes(val)),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { parseCSVContent, validateProductData, convertToInsertProduct } = await import("./bulk-upload-service");
+        const { createProduct } = await import("./db");
+
+        try {
+          const products = parseCSVContent(input.csvContent);
+          const result = {
+            success: 0,
+            failed: 0,
+            errors: [] as Array<{ row: number; error: string }>,
+            products: [] as Array<{ id: number; name: string; sku: string }>,
+          };
+
+          for (let i = 0; i < products.length; i++) {
+            const product = products[i];
+            const rowNumber = i + 2; // +2 because of 0-index and header row
+
+            // Validate product data
+            const validationError = validateProductData(product, rowNumber);
+            if (validationError) {
+              result.failed++;
+              result.errors.push({ row: rowNumber, error: validationError });
+              continue;
+            }
+
+            try {
+              // Convert and insert product
+              const insertData = convertToInsertProduct(product, input.categoryId, input.conditionGrade);
+              const createdProduct = await createProduct(insertData);
+
+              if (createdProduct) {
+                result.success++;
+                result.products.push({
+                  id: createdProduct.id,
+                  name: createdProduct.name,
+                  sku: createdProduct.sku,
+                });
+              } else {
+                result.failed++;
+                result.errors.push({ row: rowNumber, error: "Failed to create product in database" });
+              }
+            } catch (error) {
+              result.failed++;
+              result.errors.push({
+                row: rowNumber,
+                error: `Database error: ${error instanceof Error ? error.message : "Unknown error"}`,
+              });
+            }
+          }
+
+          return result;
+        } catch (error) {
+          console.error("[Bulk Upload] Error processing CSV:", error);
+          throw new Error(`Failed to process CSV: ${error instanceof Error ? error.message : "Unknown error"}`);
+        }
+      }),
+
+    getCSVTemplate: publicProcedure.query(async () => {
+      const { generateCSVTemplate } = await import("./bulk-upload-service");
+      return generateCSVTemplate();
+    }),
+
+    validateCSVFile: publicProcedure
+      .input(z.object({
+        fileName: z.string(),
+        fileSize: z.number(),
+      }))
+      .query(async ({ input }) => {
+        const { validateCSVFile } = await import("./bulk-upload-service");
+        
+        const file = new File([], input.fileName);
+        Object.defineProperty(file, "size", { value: input.fileSize });
+        
+        const error = validateCSVFile(file);
+        return { valid: !error, error };
+      }),
+  }),
+
+  // FAQ Management
+  faq: router({
+    getCategories: publicProcedure.query(async () => {
+      const { getFaqCategories } = await import("./db");
+      return getFaqCategories();
+    }),
+
+    getItemsByCategory: publicProcedure
+      .input(z.number())
+      .query(async ({ input: categoryId }) => {
+        const { getFaqItemsByCategory } = await import("./db");
+        return getFaqItemsByCategory(categoryId);
+      }),
+
+    getItemById: publicProcedure
+      .input(z.number())
+      .query(async ({ input: itemId }) => {
+        const { getFaqItemById, updateFaqItemViews } = await import("./db");
+        const item = await getFaqItemById(itemId);
+        if (item) {
+          await updateFaqItemViews(itemId);
+        }
+        return item;
+      }),
+
+    search: publicProcedure
+      .input(z.string().min(2))
+      .query(async ({ input: query }) => {
+        const { searchFaqItems } = await import("./db");
+        return searchFaqItems(query);
+      }),
+
+    markHelpful: publicProcedure
+      .input(z.object({
+        itemId: z.number(),
+        helpful: z.boolean(),
+      }))
+      .mutation(async ({ input }) => {
+        const { updateFaqItemHelpful } = await import("./db");
+        await updateFaqItemHelpful(input.itemId, input.helpful);
+        return { success: true };
+      }),
+
+    createCategory: protectedProcedure
+      .input(z.object({
+        name: z.string(),
+        slug: z.string(),
+        description: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { createFaqCategory } = await import("./db");
+        
+        const category = await createFaqCategory({
+          name: input.name,
+          slug: input.slug,
+          description: input.description,
+        });
+
+        return category || { error: "Failed to create category" };
+      }),
+
+    createItem: protectedProcedure
+      .input(z.object({
+        categoryId: z.number(),
+        question: z.string(),
+        answer: z.string(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { createFaqItem } = await import("./db");
+        
+        const item = await createFaqItem({
+          categoryId: input.categoryId,
+          question: input.question,
+          answer: input.answer,
+        });
+
+        return item || { error: "Failed to create FAQ item" };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;
