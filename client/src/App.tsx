@@ -11,6 +11,8 @@ import RFQ from "./pages/RFQ";
 import Certifications from "./pages/Certifications";
 import Checkout from "./pages/Checkout";
 import Orders from "./pages/Orders";
+import BulkQuoteRequest from "./pages/BulkQuoteRequest";
+import QuoteManagement from "./pages/QuoteManagement";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -24,6 +26,8 @@ function Router() {
       <Route path={"/checkout"} component={Checkout} />
       <Route path={"/orders/:orderId"} component={Orders} />
       <Route path={"/orders"} component={Orders} />
+      <Route path={"/bulk-quote-request"} component={BulkQuoteRequest} />
+      <Route path={"/quote-management"} component={QuoteManagement} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

@@ -242,3 +242,88 @@ export async function getOrderItems(orderId: number): Promise<OrderItem[]> {
   if (!db) return [];
   return db.select().from(orderItems).where(eq(orderItems.orderId, orderId));
 }
+
+
+// Quote queries
+export async function createQuote(quote: InsertQuote): Promise<Quote | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  try {
+    await db.insert(quotes).values(quote);
+    const result = await db.select().from(quotes).where(eq(quotes.rfqInquiryId, quote.rfqInquiryId)).orderBy(quotes.id).limit(1);
+    return result.length > 0 ? result[0] : undefined;
+  } catch (error) {
+    console.error("[Database] Failed to create quote:", error);
+    return undefined;
+  }
+}
+
+export async function getQuoteById(quoteId: number): Promise<Quote | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(quotes).where(eq(quotes.id, quoteId)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getQuotesByRfqId(rfqInquiryId: number): Promise<Quote[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(quotes).where(eq(quotes.rfqInquiryId, rfqInquiryId));
+}
+
+export async function updateQuoteStatus(quoteId: number, status: string): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(quotes).set({ status: status as any, updatedAt: new Date() }).where(eq(quotes.id, quoteId));
+}
+
+// Quote Items queries
+export async function createQuoteItem(item: InsertQuoteItem): Promise<QuoteItem | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  try {
+    await db.insert(quoteItems).values(item);
+    const result = await db.select().from(quoteItems).where(eq(quoteItems.quoteId, item.quoteId)).limit(1);
+    return result.length > 0 ? result[0] : undefined;
+  } catch (error) {
+    console.error("[Database] Failed to create quote item:", error);
+    return undefined;
+  }
+}
+
+export async function getQuoteItems(quoteId: number): Promise<QuoteItem[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(quoteItems).where(eq(quoteItems.quoteId, quoteId));
+}
+
+export async function updateQuoteItem(itemId: number, updates: Partial<QuoteItem>): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(quoteItems).set(updates).where(eq(quoteItems.id, itemId));
+}
+
+// Quote History queries
+export async function addQuoteHistory(history: InsertQuoteHistory): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(quoteHistory).values(history);
+}
+
+export async function getQuoteHistory(quoteId: number): Promise<QuoteHistory[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(quoteHistory).where(eq(quoteHistory.quoteId, quoteId));
+}
+
+import {
+  quotes,
+  quoteItems,
+  quoteHistory,
+  type Quote,
+  type InsertQuote,
+  type QuoteItem,
+  type InsertQuoteItem,
+  type QuoteHistory,
+  type InsertQuoteHistory
+} from "../drizzle/schema";

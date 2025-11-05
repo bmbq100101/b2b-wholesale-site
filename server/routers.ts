@@ -19,9 +19,18 @@ import {
   getOrderItems,
   getUserOrders,
   createOrder,
+  createOrderItem,
   updateOrderStatus,
+  createQuote,
+  getQuoteById,
+  getQuotesByRfqId,
+  updateQuoteStatus,
+  createQuoteItem,
+  getQuoteItems,
+  addQuoteHistory,
+  getQuoteHistory,
 } from "./db";
-import { rfqInquiries, buyerProfiles, orders } from "../drizzle/schema";
+import { rfqInquiries, buyerProfiles, orders, quotes } from "../drizzle/schema";
 
 export const appRouter = router({
   system: systemRouter,
@@ -235,6 +244,168 @@ export const appRouter = router({
     getUserOrders: protectedProcedure
       .query(async ({ ctx }) => {
         return getUserOrders(ctx.user.id);
+      }),
+  }),
+
+  // Advanced RFQ and Quote Management
+  quotes: router({
+    createQuote: protectedProcedure
+      .input(z.object({
+        rfqInquiryId: z.number(),
+        items: z.array(z.object({
+          productId: z.number(),
+          quantity: z.number().min(1),
+          unitPrice: z.number().min(0),
+          discount: z.number().min(0).max(100).optional(),
+          notes: z.string().optional(),
+        })),
+        validDays: z.number().default(30),
+        notes: z.string().optional(),
+        terms: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        try {
+          // Calculate total amount
+          let totalAmount = 0;
+          const quoteNumber = `QT-${Date.now()}`;
+          const validUntil = new Date();
+          validUntil.setDate(validUntil.getDate() + input.validDays);
+
+          // Create quote
+          const quote = await createQuote({
+            rfqInquiryId: input.rfqInquiryId,
+            quoteNumber,
+            status: "draft",
+            totalAmount: 0, // Will update after items
+            currency: "USD",
+            validUntil,
+            notes: input.notes,
+            terms: input.terms,
+            createdBy: ctx.user.id,
+          });
+
+          if (!quote) throw new Error("Failed to create quote");
+
+          // Create quote items
+          for (const item of input.items) {
+            const itemTotal = item.unitPrice * item.quantity * (1 - (item.discount || 0) / 100);
+            totalAmount += itemTotal;
+
+            await createQuoteItem({
+              quoteId: quote.id,
+              productId: item.productId,
+              quantity: item.quantity,
+              unitPrice: Math.round(item.unitPrice * 100),
+              totalPrice: Math.round(itemTotal * 100),
+              discount: item.discount || 0,
+              notes: item.notes,
+            });
+          }
+
+          // Update quote with total amount
+          const db = await getDb();
+          if (db) {
+            await db.update(quotes).set({ totalAmount: Math.round(totalAmount * 100) }).where(eq(quotes.id, quote.id));
+            
+            // Add history entry
+            await addQuoteHistory({
+              quoteId: quote.id,
+              action: "created",
+              changedBy: ctx.user.id,
+              notes: "Quote created",
+            });
+          }
+
+          return quote;
+        } catch (error) {
+          console.error("[Quote] Error creating quote:", error);
+          throw new Error("Failed to create quote");
+        }
+      }),
+
+    getQuote: protectedProcedure
+      .input(z.number())
+      .query(async ({ ctx, input: quoteId }) => {
+        const quote = await getQuoteById(quoteId);
+        
+        if (!quote) throw new Error("Quote not found");
+
+        const items = await getQuoteItems(quoteId);
+        const history = await getQuoteHistory(quoteId);
+        
+        return { quote, items, history };
+      }),
+
+    getRfqQuotes: protectedProcedure
+      .input(z.number())
+      .query(async ({ ctx, input: rfqInquiryId }) => {
+        return getQuotesByRfqId(rfqInquiryId);
+      }),
+
+    updateQuoteStatus: protectedProcedure
+      .input(z.object({
+        quoteId: z.number(),
+        status: z.enum(["draft", "sent", "accepted", "rejected", "expired"]),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        try {
+          await updateQuoteStatus(input.quoteId, input.status);
+          
+          // Add history entry
+          await addQuoteHistory({
+            quoteId: input.quoteId,
+            action: input.status,
+            changedBy: ctx.user.id,
+            notes: input.notes,
+          });
+
+          return { success: true };
+        } catch (error) {
+          console.error("[Quote] Error updating status:", error);
+          throw new Error("Failed to update quote status");
+        }
+      }),
+
+    convertQuoteToOrder: protectedProcedure
+      .input(z.number())
+      .mutation(async ({ ctx, input: quoteId }) => {
+        try {
+          const quote = await getQuoteById(quoteId);
+          if (!quote) throw new Error("Quote not found");
+
+          const quoteItems = await getQuoteItems(quoteId);
+          
+          // Create order from quote
+          const order = await createOrder({
+            userId: ctx.user.id,
+            status: "pending",
+            totalAmount: quote.totalAmount,
+            currency: quote.currency,
+            items: JSON.stringify(quoteItems),
+            customerEmail: ctx.user.email || "",
+            customerName: ctx.user.name || "",
+            notes: `Converted from quote ${quote.quoteNumber}`,
+          });
+
+          if (!order) throw new Error("Failed to create order");
+
+          // Create order items
+          for (const item of quoteItems) {
+            await createOrderItem({
+              orderId: order.id,
+              productId: item.productId,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              totalPrice: item.totalPrice,
+            });
+          }
+
+          return { orderId: order.id, orderNumber: `ORD-${order.id}` };
+        } catch (error) {
+          console.error("[Quote] Error converting to order:", error);
+          throw new Error("Failed to convert quote to order");
+        }
       }),
   }),
 });

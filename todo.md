@@ -95,3 +95,15 @@
 - [ ] Add webhook handling for payment events
 - [ ] Implement refund processing
 - [x] Create payment history page for users
+
+
+## Advanced RFQ & Bulk Quote Management
+- [x] Create enhanced RFQ form with multiple product selection
+- [x] Build quote comparison interface for customers
+- [x] Implement quote expiration and versioning system
+- [x] Add quote approval workflow
+- [ ] Create admin dashboard for managing RFQs and quotes
+- [x] Implement quote-to-order conversion
+- [ ] Add email notifications for RFQ status updates
+- [ ] Create quote PDF generation and download
+- [ ] Implement quote history and analytics

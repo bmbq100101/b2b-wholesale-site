@@ -200,3 +200,52 @@ export const invoices = mysqlTable("invoices", {
 
 export type Invoice = typeof invoices.$inferSelect;
 export type InsertInvoice = typeof invoices.$inferInsert;
+
+// Quotes (for bulk order pricing)
+export const quotes = mysqlTable("quotes", {
+  id: int("id").autoincrement().primaryKey(),
+  rfqInquiryId: int("rfqInquiryId").notNull(),
+  quoteNumber: varchar("quoteNumber", { length: 50 }).notNull().unique(),
+  status: mysqlEnum("status", ["draft", "sent", "accepted", "rejected", "expired"]).default("draft"),
+  totalAmount: int("totalAmount").notNull(), // in cents
+  currency: varchar("currency", { length: 3 }).default("USD"),
+  validUntil: timestamp("validUntil"),
+  notes: text("notes"),
+  terms: text("terms"), // Payment terms, delivery terms, etc.
+  createdBy: int("createdBy").notNull(), // Admin user ID
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Quote = typeof quotes.$inferSelect;
+export type InsertQuote = typeof quotes.$inferInsert;
+
+// Quote Items (line items in a quote)
+export const quoteItems = mysqlTable("quoteItems", {
+  id: int("id").autoincrement().primaryKey(),
+  quoteId: int("quoteId").notNull(),
+  productId: int("productId").notNull(),
+  quantity: int("quantity").notNull(),
+  unitPrice: int("unitPrice").notNull(), // in cents
+  totalPrice: int("totalPrice").notNull(), // in cents
+  discount: int("discount").default(0), // discount percentage
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type QuoteItem = typeof quoteItems.$inferSelect;
+export type InsertQuoteItem = typeof quoteItems.$inferInsert;
+
+// Quote History (track quote versions and changes)
+export const quoteHistory = mysqlTable("quoteHistory", {
+  id: int("id").autoincrement().primaryKey(),
+  quoteId: int("quoteId").notNull(),
+  action: varchar("action", { length: 50 }).notNull(), // created, updated, sent, accepted, rejected
+  changedBy: int("changedBy").notNull(),
+  previousData: text("previousData"), // JSON of previous values
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type QuoteHistory = typeof quoteHistory.$inferSelect;
+export type InsertQuoteHistory = typeof quoteHistory.$inferInsert;
