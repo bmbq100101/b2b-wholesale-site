@@ -514,3 +514,18 @@ export const membershipHistory = mysqlTable("membershipHistory", {
 
 export type MembershipHistory = typeof membershipHistory.$inferSelect;
 export type InsertMembershipHistory = typeof membershipHistory.$inferInsert;
+
+
+// Shopping Cart
+export const cartItems = mysqlTable("cartItems", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  productId: int("productId").notNull(),
+  quantity: int("quantity").notNull().default(1),
+  selectedMoq: int("selectedMoq"), // Selected MOQ tier
+  addedAt: timestamp("addedAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type CartItem = typeof cartItems.$inferSelect;
+export type InsertCartItem = typeof cartItems.$inferInsert;

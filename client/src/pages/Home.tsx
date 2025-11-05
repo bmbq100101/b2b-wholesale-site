@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { APP_LOGO, APP_TITLE, getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
-import { ArrowRight, CheckCircle, Globe, Shield, Zap, Users, Package, TrendingUp } from "lucide-react";
+import { ArrowRight, CheckCircle, Globe, Shield, Zap, Users, Package, TrendingUp, ShoppingCart } from "lucide-react";
 import { Link } from "wouter";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { useLanguage, t } from "@/components/LanguageSwitcher";
@@ -78,6 +78,12 @@ export default function Home() {
             {isAuthenticated ? (
               <div className="flex items-center gap-3">
                 <span className="text-sm text-slate-600">{user?.name || "User"}</span>
+                <Link href="/cart">
+                  <Button variant="ghost" size="sm" className="gap-2">
+                    <ShoppingCart className="w-4 h-4" />
+                    Cart
+                  </Button>
+                </Link>
                 <Link href="/dashboard">
                   <Button variant="outline" size="sm">
                     {t("nav.dashboard", language)}

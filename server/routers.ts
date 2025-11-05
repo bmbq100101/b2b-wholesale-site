@@ -1064,6 +1064,45 @@ export const appRouter = router({
       return await checkMembershipUpgrade(ctx.user.id);
     }),
   }),
+
+  // Shopping Cart routes
+  cart: router({
+    getItems: protectedProcedure.query(async ({ ctx }) => {
+      const { getCartItems } = await import("./db");
+      return await getCartItems(ctx.user.id);
+    }),
+
+    addItem: protectedProcedure
+      .input(z.object({ productId: z.number(), quantity: z.number().min(1), selectedMoq: z.number().optional() }))
+      .mutation(async ({ ctx, input }) => {
+        const { addToCart } = await import("./db");
+        return await addToCart(ctx.user.id, input.productId, input.quantity, input.selectedMoq);
+      }),
+
+    updateItem: protectedProcedure
+      .input(z.object({ cartItemId: z.number(), quantity: z.number().min(1) }))
+      .mutation(async ({ ctx, input }) => {
+        const { updateCartItem } = await import("./db");
+        return await updateCartItem(input.cartItemId, input.quantity);
+      }),
+
+    removeItem: protectedProcedure
+      .input(z.object({ cartItemId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const { removeFromCart } = await import("./db");
+        return await removeFromCart(input.cartItemId);
+      }),
+
+    clear: protectedProcedure.mutation(async ({ ctx }) => {
+      const { clearCart } = await import("./db");
+      return await clearCart(ctx.user.id);
+    }),
+
+    getTotal: protectedProcedure.query(async ({ ctx }) => {
+      const { getCartTotal } = await import("./db");
+      return await getCartTotal(ctx.user.id);
+    }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

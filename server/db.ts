@@ -726,3 +726,102 @@ export async function checkMembershipUpgrade(userId: number): Promise<Membership
 function or(...conditions: any[]) {
   return conditions.reduce((acc, cond) => acc || cond);
 }
+
+
+// Shopping Cart Queries
+import { cartItems, type CartItem, type InsertCartItem } from "../drizzle/schema";
+
+export async function getCartItems(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const result = await db
+    .select({
+      cartItem: cartItems,
+      product: products,
+    })
+    .from(cartItems)
+    .innerJoin(products, eq(cartItems.productId, products.id))
+    .where(eq(cartItems.userId, userId));
+
+  return result.map(({ cartItem, product }) => ({
+    ...cartItem,
+    product,
+  }));
+}
+
+export async function addToCart(userId: number, productId: number, quantity: number, selectedMoq?: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const existing = await db
+    .select()
+    .from(cartItems)
+    .where(and(eq(cartItems.userId, userId), eq(cartItems.productId, productId)))
+    .limit(1);
+
+  if (existing.length > 0) {
+    // Update quantity if product already in cart
+    await db
+      .update(cartItems)
+      .set({
+        quantity: existing[0].quantity + quantity,
+        selectedMoq: selectedMoq || existing[0].selectedMoq,
+        updatedAt: new Date(),
+      })
+      .where(eq(cartItems.id, existing[0].id));
+    return existing[0];
+  } else {
+    // Add new item to cart
+    const newItem: InsertCartItem = {
+      userId,
+      productId,
+      quantity,
+      selectedMoq,
+    };
+    await db.insert(cartItems).values(newItem);
+    return newItem;
+  }
+}
+
+export async function updateCartItem(cartItemId: number, quantity: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  await db
+    .update(cartItems)
+    .set({
+      quantity,
+      updatedAt: new Date(),
+    })
+    .where(eq(cartItems.id, cartItemId));
+
+  const result = await db.select().from(cartItems).where(eq(cartItems.id, cartItemId)).limit(1);
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function removeFromCart(cartItemId: number) {
+  const db = await getDb();
+  if (!db) return false;
+
+  await db.delete(cartItems).where(eq(cartItems.id, cartItemId));
+  return true;
+}
+
+export async function clearCart(userId: number) {
+  const db = await getDb();
+  if (!db) return false;
+
+  await db.delete(cartItems).where(eq(cartItems.userId, userId));
+  return true;
+}
+
+export async function getCartTotal(userId: number) {
+  const db = await getDb();
+  if (!db) return 0;
+
+  const items = await getCartItems(userId);
+  return items.reduce((total, item) => {
+    return total + (item.product.basePrice * item.quantity);
+  }, 0);
+}

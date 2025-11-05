@@ -8,13 +8,15 @@ import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { ArrowLeft, ShoppingCart, FileText, Truck, Shield } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 
 export default function ProductDetail() {
   const [, params] = useRoute("/products/:slug");
+  const [, navigate] = useLocation();
   const { isAuthenticated } = useAuth();
   const [quantity, setQuantity] = useState(1);
   const [showRFQForm, setShowRFQForm] = useState(false);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
 
   const slug = params?.slug as string;
   const { data: product, isLoading } = trpc.products.bySlug.useQuery(slug, {
@@ -29,6 +31,17 @@ export default function ProductDetail() {
       alert("RFQ submitted successfully! Our team will contact you soon.");
       setShowRFQForm(false);
       setQuantity(1);
+    },
+  });
+
+  const addToCart = trpc.cart.addItem.useMutation({
+    onSuccess: () => {
+      alert("Product added to cart!");
+      setQuantity(1);
+      navigate("/cart");
+    },
+    onError: (error) => {
+      alert("Failed to add to cart: " + error.message);
     },
   });
 
@@ -210,13 +223,23 @@ export default function ProductDetail() {
               <div className="space-y-3">
                 {isAuthenticated ? (
                   <>
-                    <Button className="w-full gap-2 h-12" onClick={() => setShowRFQForm(!showRFQForm)}>
+                    <Button 
+                      className="w-full gap-2 h-12" 
+                      onClick={() => {
+                        setIsAddingToCart(true);
+                        addToCart.mutate({
+                          productId: product.id,
+                          quantity,
+                        });
+                      }}
+                      disabled={isAddingToCart}
+                    >
+                      <ShoppingCart className="w-5 h-5" />
+                      {isAddingToCart ? "Adding to Cart..." : "Add to Cart"}
+                    </Button>
+                    <Button variant="outline" className="w-full gap-2 h-12" onClick={() => setShowRFQForm(!showRFQForm)}>
                       <FileText className="w-5 h-5" />
                       Request Quote (RFQ)
-                    </Button>
-                    <Button variant="outline" className="w-full gap-2 h-12">
-                      <ShoppingCart className="w-5 h-5" />
-                      Add to Inquiry List
                     </Button>
                   </>
                 ) : (
