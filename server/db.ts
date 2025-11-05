@@ -436,3 +436,20 @@ import {
   type InsertChatMessage,
   type SupportAgent,
 } from "../drizzle/schema";
+
+
+// Get user email by ID
+export async function getUserEmail(userId: number): Promise<string | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  return result.length > 0 ? result[0].email || undefined : undefined;
+}
+
+// Get support agent name by ID
+export async function getSupportAgentName(agentId: number): Promise<string | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(supportAgents).where(eq(supportAgents.id, agentId)).limit(1);
+  return result.length > 0 ? result[0].name : undefined;
+}

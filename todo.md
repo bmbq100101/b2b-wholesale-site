@@ -118,3 +118,13 @@
 - [x] Implement message persistence and history
 - [ ] Add typing indicators and read receipts
 - [x] Create chat availability status
+
+
+## Chat Email Transcripts
+- [x] Create email template for chat transcripts
+- [x] Implement email sending service integration
+- [x] Add transcript generation from chat messages
+- [x] Send email on chat session closure
+- [ ] Add user email preferences for transcripts
+- [x] Create transcript formatting with timestamps
+- [ ] Test email delivery and formatting

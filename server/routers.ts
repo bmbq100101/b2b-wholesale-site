@@ -501,7 +501,8 @@ export const appRouter = router({
     closeSession: protectedProcedure
       .input(z.number())
       .mutation(async ({ ctx, input: sessionId }) => {
-        const { getChatSession, closeChatSession, releaseChatFromAgent } = await import("./db");
+        const { getChatSession, closeChatSession, releaseChatFromAgent, getChatMessages, getUserEmail, getSupportAgentName } = await import("./db");
+        const { sendChatTranscriptEmail } = await import("./email-service");
         
         try {
           const session = await getChatSession(sessionId);
@@ -514,6 +515,28 @@ export const appRouter = router({
           }
 
           await closeChatSession(sessionId);
+
+          // Send email transcript
+          try {
+            const messages = await getChatMessages(sessionId);
+            const userEmail = await getUserEmail(ctx.user.id);
+            const agentName = session.supportAgentId ? await getSupportAgentName(session.supportAgentId) : undefined;
+
+            if (userEmail && messages.length > 0) {
+              await sendChatTranscriptEmail({
+                userName: (ctx.user.name || "Customer") as string,
+                userEmail: userEmail || undefined,
+                topic: session.topic || "General Inquiry",
+                startTime: session.startedAt,
+                endTime: session.closedAt || new Date(),
+                messages,
+                agentName,
+              });
+            }
+          } catch (emailError) {
+            console.error("[Chat] Failed to send transcript email:", emailError);
+          }
+
           return { success: true };
         } catch (error) {
           console.error("[Chat] Error closing session:", error);
