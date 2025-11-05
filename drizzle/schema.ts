@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -249,3 +249,51 @@ export const quoteHistory = mysqlTable("quoteHistory", {
 
 export type QuoteHistory = typeof quoteHistory.$inferSelect;
 export type InsertQuoteHistory = typeof quoteHistory.$inferInsert;
+
+
+// Live Chat System
+export const chatSessions = mysqlTable("chatSessions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  supportAgentId: int("supportAgentId"),
+  status: mysqlEnum("status", ["active", "closed", "waiting"]).default("waiting"),
+  topic: varchar("topic", { length: 255 }).default("General Inquiry"),
+  startedAt: timestamp("startedAt").defaultNow().notNull(),
+  closedAt: timestamp("closedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ChatSession = typeof chatSessions.$inferSelect;
+export type InsertChatSession = typeof chatSessions.$inferInsert;
+
+// Chat Messages
+export const chatMessages = mysqlTable("chatMessages", {
+  id: int("id").autoincrement().primaryKey(),
+  sessionId: int("sessionId").notNull(),
+  senderId: int("senderId").notNull(),
+  senderType: mysqlEnum("senderType", ["customer", "agent"]).notNull(),
+  message: text("message").notNull(),
+  attachmentUrl: varchar("attachmentUrl", { length: 500 }),
+  isRead: boolean("isRead").default(false),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ChatMessage = typeof chatMessages.$inferSelect;
+export type InsertChatMessage = typeof chatMessages.$inferInsert;
+
+// Support Agents
+export const supportAgents = mysqlTable("supportAgents", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(),
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull(),
+  status: mysqlEnum("status", ["online", "offline", "busy"]).default("offline"),
+  maxChats: int("maxChats").default(5),
+  currentChats: int("currentChats").default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SupportAgent = typeof supportAgents.$inferSelect;
+export type InsertSupportAgent = typeof supportAgents.$inferInsert;

@@ -1,4 +1,4 @@
-import { eq, and } from "drizzle-orm";
+import { eq, ne, lt, and, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { 
   InsertUser, 
@@ -326,4 +326,113 @@ import {
   type InsertQuoteItem,
   type QuoteHistory,
   type InsertQuoteHistory
+} from "../drizzle/schema";
+
+
+// Chat Session queries
+export async function createChatSession(session: InsertChatSession): Promise<ChatSession | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  try {
+    await db.insert(chatSessions).values(session);
+    const result = await db.select().from(chatSessions).where(eq(chatSessions.userId, session.userId)).orderBy(chatSessions.id).limit(1);
+    return result.length > 0 ? result[0] : undefined;
+  } catch (error) {
+    console.error("[Database] Failed to create chat session:", error);
+    return undefined;
+  }
+}
+
+export async function getChatSession(sessionId: number): Promise<ChatSession | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(chatSessions).where(eq(chatSessions.id, sessionId)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getUserActiveChatSession(userId: number): Promise<ChatSession | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(chatSessions).where(eq(chatSessions.userId, userId)).orderBy(chatSessions.id).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function updateChatSessionStatus(sessionId: number, status: string): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(chatSessions).set({ status: status as any, updatedAt: new Date() }).where(eq(chatSessions.id, sessionId));
+}
+
+export async function closeChatSession(sessionId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(chatSessions).set({ status: "closed", closedAt: new Date(), updatedAt: new Date() }).where(eq(chatSessions.id, sessionId));
+}
+
+// Chat Message queries
+export async function createChatMessage(message: InsertChatMessage): Promise<ChatMessage | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  try {
+    await db.insert(chatMessages).values(message);
+    const result = await db.select().from(chatMessages).where(eq(chatMessages.sessionId, message.sessionId)).orderBy(chatMessages.id).limit(1);
+    return result.length > 0 ? result[0] : undefined;
+  } catch (error) {
+    console.error("[Database] Failed to create chat message:", error);
+    return undefined;
+  }
+}
+
+export async function getChatMessages(sessionId: number): Promise<ChatMessage[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(chatMessages).where(eq(chatMessages.sessionId, sessionId)).orderBy(chatMessages.id);
+}
+
+export async function markMessagesAsRead(sessionId: number, userId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(chatMessages).set({ isRead: true }).where(
+    and(eq(chatMessages.sessionId, sessionId), ne(chatMessages.senderId, userId))
+  );
+}
+
+// Support Agent queries
+export async function getSupportAgents(): Promise<SupportAgent[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(supportAgents).where(eq(supportAgents.status, "online"));
+}
+
+export async function getAvailableSupportAgent(): Promise<SupportAgent | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(supportAgents)
+    .where(and(eq(supportAgents.status, "online"), lt(supportAgents.currentChats, supportAgents.maxChats)))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function assignChatToAgent(sessionId: number, agentId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(chatSessions).set({ supportAgentId: agentId, status: "active" }).where(eq(chatSessions.id, sessionId));
+  await db.update(supportAgents).set({ currentChats: sql`currentChats + 1` }).where(eq(supportAgents.id, agentId));
+}
+
+export async function releaseChatFromAgent(sessionId: number, agentId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(supportAgents).set({ currentChats: sql`GREATEST(0, currentChats - 1)` }).where(eq(supportAgents.id, agentId));
+}
+
+import {
+  chatSessions,
+  chatMessages,
+  supportAgents,
+  type ChatSession,
+  type InsertChatSession,
+  type ChatMessage,
+  type InsertChatMessage,
+  type SupportAgent,
 } from "../drizzle/schema";

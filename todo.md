@@ -107,3 +107,14 @@
 - [ ] Add email notifications for RFQ status updates
 - [ ] Create quote PDF generation and download
 - [ ] Implement quote history and analytics
+
+
+## Live Chat Integration
+- [x] Design and implement live chat database schema
+- [x] Create chat message tRPC procedures
+- [x] Build live chat UI component
+- [x] Integrate chat into quote request page
+- [ ] Add support agent notification system
+- [x] Implement message persistence and history
+- [ ] Add typing indicators and read receipts
+- [x] Create chat availability status

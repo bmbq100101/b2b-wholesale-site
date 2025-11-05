@@ -29,6 +29,13 @@
       "when": 1762336534810,
       "tag": "0003_mighty_sabra",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1762336853509,
+      "tag": "0004_lush_fabian_cortez",
+      "breakpoints": true
     }
   ]
 }

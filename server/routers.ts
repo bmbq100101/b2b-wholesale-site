@@ -408,6 +408,125 @@ export const appRouter = router({
         }
       }),
   }),
+
+  // Live Chat
+  chat: router({
+    startSession: protectedProcedure
+      .input(z.object({
+        topic: z.string().default("General Inquiry"),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { createChatSession, getAvailableSupportAgent, assignChatToAgent } = await import("./db");
+        
+        try {
+          // Create chat session
+          const session = await createChatSession({
+            userId: ctx.user.id,
+            status: "waiting",
+            topic: input.topic,
+          });
+
+          if (!session) throw new Error("Failed to create chat session");
+
+          // Try to assign to available agent
+          const agent = await getAvailableSupportAgent();
+          if (agent) {
+            await assignChatToAgent(session.id, agent.id);
+          }
+
+          return session;
+        } catch (error) {
+          console.error("[Chat] Error starting session:", error);
+          throw new Error("Failed to start chat session");
+        }
+      }),
+
+    getSession: protectedProcedure
+      .input(z.number())
+      .query(async ({ ctx, input: sessionId }) => {
+        const { getChatSession, getChatMessages } = await import("./db");
+        
+        const session = await getChatSession(sessionId);
+        if (!session || session.userId !== ctx.user.id) {
+          throw new Error("Session not found or unauthorized");
+        }
+
+        const messages = await getChatMessages(sessionId);
+        return { session, messages };
+      }),
+
+    sendMessage: protectedProcedure
+      .input(z.object({
+        sessionId: z.number(),
+        message: z.string().min(1).max(5000),
+        attachmentUrl: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { createChatMessage } = await import("./db");
+        
+        try {
+          const message = await createChatMessage({
+            sessionId: input.sessionId,
+            senderId: ctx.user.id,
+            senderType: "customer",
+            message: input.message,
+            attachmentUrl: input.attachmentUrl,
+          });
+
+          return message;
+        } catch (error) {
+          console.error("[Chat] Error sending message:", error);
+          throw new Error("Failed to send message");
+        }
+      }),
+
+    getMessages: protectedProcedure
+      .input(z.number())
+      .query(async ({ ctx, input: sessionId }) => {
+        const { getChatSession, getChatMessages, markMessagesAsRead } = await import("./db");
+        
+        const session = await getChatSession(sessionId);
+        if (!session || session.userId !== ctx.user.id) {
+          throw new Error("Session not found or unauthorized");
+        }
+
+        const messages = await getChatMessages(sessionId);
+        
+        // Mark messages as read
+        await markMessagesAsRead(sessionId, ctx.user.id);
+
+        return messages;
+      }),
+
+    closeSession: protectedProcedure
+      .input(z.number())
+      .mutation(async ({ ctx, input: sessionId }) => {
+        const { getChatSession, closeChatSession, releaseChatFromAgent } = await import("./db");
+        
+        try {
+          const session = await getChatSession(sessionId);
+          if (!session || session.userId !== ctx.user.id) {
+            throw new Error("Session not found or unauthorized");
+          }
+
+          if (session.supportAgentId) {
+            await releaseChatFromAgent(sessionId, session.supportAgentId);
+          }
+
+          await closeChatSession(sessionId);
+          return { success: true };
+        } catch (error) {
+          console.error("[Chat] Error closing session:", error);
+          throw new Error("Failed to close chat session");
+        }
+      }),
+
+    getUserSession: protectedProcedure
+      .query(async ({ ctx }) => {
+        const { getUserActiveChatSession } = await import("./db");
+        return getUserActiveChatSession(ctx.user.id);
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

@@ -8,6 +8,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { Plus, Trash2, AlertCircle, CheckCircle, Loader2 } from "lucide-react";
 import { Link } from "wouter";
+import LiveChat from "@/components/LiveChat";
 
 interface QuoteItem {
   productId: number;
@@ -343,6 +344,9 @@ export default function BulkQuoteRequest() {
           </div>
         </div>
       </div>
+
+      {/* Live Chat Widget */}
+      <LiveChat topic="Bulk Quote Request" />
     </div>
   );
 }
