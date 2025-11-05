@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -90,3 +90,81 @@ export async function getUserByOpenId(openId: string) {
 }
 
 // TODO: add feature queries here as your schema grows.
+
+import { 
+  categories, 
+  products, 
+  pricingTiers, 
+  rfqInquiries, 
+  buyerProfiles,
+  certifications,
+  type Product,
+  type Category,
+  type PricingTier,
+  type RfqInquiry,
+  type BuyerProfile,
+  type Certification
+} from "../drizzle/schema";
+
+// Product queries
+export async function getProductsByCategory(categoryId: number): Promise<Product[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(products).where(and(eq(products.categoryId, categoryId), eq(products.active, 1)));
+}
+
+export async function getProductBySlug(slug: string): Promise<Product | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(products).where(eq(products.slug, slug)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getFeaturedProducts(limit: number = 6): Promise<Product[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(products).where(and(eq(products.featured, 1), eq(products.active, 1))).limit(limit);
+}
+
+export async function getAllCategories(): Promise<Category[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(categories);
+}
+
+export async function getAllProducts(limit?: number): Promise<Product[]> {
+  const db = await getDb();
+  if (!db) return [];
+  const query = db.select().from(products).where(eq(products.active, 1));
+  if (limit) {
+    return query.limit(limit);
+  }
+  return query;
+}
+
+// RFQ queries
+export async function getRfqInquiriesByUser(userId: number): Promise<RfqInquiry[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(rfqInquiries).where(eq(rfqInquiries.userId, userId));
+}
+
+export async function getPricingTiers(productId: number): Promise<PricingTier[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(pricingTiers).where(eq(pricingTiers.productId, productId));
+}
+
+// Buyer profile queries
+export async function getBuyerProfile(userId: number): Promise<BuyerProfile | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(buyerProfiles).where(eq(buyerProfiles.userId, userId)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getCertifications(): Promise<Certification[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(certifications);
+}

@@ -25,4 +25,128 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+// Product Categories
+export const categories = mysqlTable("categories", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  slug: varchar("slug", { length: 255 }).notNull().unique(),
+  description: text("description"),
+  image: varchar("image", { length: 512 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Category = typeof categories.$inferSelect;
+export type InsertCategory = typeof categories.$inferInsert;
+
+// Product Condition Grades
+export const conditionGrades = mysqlTable("conditionGrades", {
+  id: int("id").autoincrement().primaryKey(),
+  grade: varchar("grade", { length: 10 }).notNull().unique(), // A, B, C
+  description: text("description"),
+  priceMultiplier: varchar("priceMultiplier", { length: 10 }).notNull(), // 1.0, 0.8, 0.6
+});
+
+export type ConditionGrade = typeof conditionGrades.$inferSelect;
+export type InsertConditionGrade = typeof conditionGrades.$inferInsert;
+
+// Products
+export const products = mysqlTable("products", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  slug: varchar("slug", { length: 255 }).notNull().unique(),
+  description: text("description"),
+  categoryId: int("categoryId").notNull(),
+  conditionGrade: varchar("conditionGrade", { length: 10 }).notNull(), // A, B, C
+  basePrice: int("basePrice").notNull(), // in cents
+  moq: int("moq").notNull().default(1), // Minimum Order Quantity
+  stock: int("stock").notNull().default(0),
+  images: text("images"), // JSON array of image URLs
+  specifications: text("specifications"), // JSON object of specs
+  sku: varchar("sku", { length: 100 }).notNull().unique(),
+  weight: varchar("weight", { length: 50 }), // e.g., "500g", "2kg"
+  dimensions: varchar("dimensions", { length: 100 }), // e.g., "10x20x30cm"
+  origin: varchar("origin", { length: 100 }).default("Dongguan, China"),
+  featured: int("featured").default(0), // 0 or 1
+  active: int("active").default(1), // 0 or 1
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Product = typeof products.$inferSelect;
+export type InsertProduct = typeof products.$inferInsert;
+
+// Pricing Tiers (MOQ-based pricing)
+export const pricingTiers = mysqlTable("pricingTiers", {
+  id: int("id").autoincrement().primaryKey(),
+  productId: int("productId").notNull(),
+  minQuantity: int("minQuantity").notNull(),
+  maxQuantity: int("maxQuantity"), // null means unlimited
+  price: int("price").notNull(), // in cents
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PricingTier = typeof pricingTiers.$inferSelect;
+export type InsertPricingTier = typeof pricingTiers.$inferInsert;
+
+// RFQ (Request for Quote) Inquiries
+export const rfqInquiries = mysqlTable("rfqInquiries", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  productId: int("productId").notNull(),
+  quantity: int("quantity").notNull(),
+  companyName: varchar("companyName", { length: 255 }),
+  contactName: varchar("contactName", { length: 255 }),
+  email: varchar("email", { length: 320 }),
+  phone: varchar("phone", { length: 20 }),
+  country: varchar("country", { length: 100 }),
+  message: text("message"),
+  status: mysqlEnum("status", ["pending", "quoted", "accepted", "rejected"]).default("pending"),
+  quotedPrice: int("quotedPrice"), // in cents
+  quotedAt: timestamp("quotedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type RfqInquiry = typeof rfqInquiries.$inferSelect;
+export type InsertRfqInquiry = typeof rfqInquiries.$inferInsert;
+
+// Buyer Profiles (Extended user info for B2B)
+export const buyerProfiles = mysqlTable("buyerProfiles", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(),
+  companyName: varchar("companyName", { length: 255 }),
+  companyType: varchar("companyType", { length: 100 }), // Distributor, Retailer, etc.
+  country: varchar("country", { length: 100 }),
+  businessLicense: varchar("businessLicense", { length: 255 }),
+  verificationStatus: mysqlEnum("verificationStatus", ["pending", "verified", "rejected"]).default("pending"),
+  verifiedAt: timestamp("verifiedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type BuyerProfile = typeof buyerProfiles.$inferSelect;
+export type InsertBuyerProfile = typeof buyerProfiles.$inferInsert;
+
+// Certifications & Trust Information
+export const certifications = mysqlTable("certifications", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(), // CE, FCC, RoHS, etc.
+  description: text("description"),
+  certificateUrl: varchar("certificateUrl", { length: 512 }),
+  expiryDate: timestamp("expiryDate"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Certification = typeof certifications.$inferSelect;
+export type InsertCertification = typeof certifications.$inferInsert;
+
+// Product Certifications (Many-to-many)
+export const productCertifications = mysqlTable("productCertifications", {
+  id: int("id").autoincrement().primaryKey(),
+  productId: int("productId").notNull(),
+  certificationId: int("certificationId").notNull(),
+});
+
+export type ProductCertification = typeof productCertifications.$inferSelect;
+export type InsertProductCertification = typeof productCertifications.$inferInsert;
