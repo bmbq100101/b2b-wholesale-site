@@ -150,3 +150,53 @@ export const productCertifications = mysqlTable("productCertifications", {
 
 export type ProductCertification = typeof productCertifications.$inferSelect;
 export type InsertProductCertification = typeof productCertifications.$inferInsert;
+
+// Orders (for Stripe payments)
+export const orders = mysqlTable("orders", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  stripeSessionId: varchar("stripeSessionId", { length: 255 }).unique(),
+  stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 255 }).unique(),
+  status: mysqlEnum("status", ["pending", "completed", "failed", "cancelled"]).default("pending"),
+  totalAmount: int("totalAmount").notNull(), // in cents
+  currency: varchar("currency", { length: 3 }).default("USD"),
+  items: text("items"), // JSON array of order items
+  customerEmail: varchar("customerEmail", { length: 320 }),
+  customerName: varchar("customerName", { length: 255 }),
+  shippingAddress: text("shippingAddress"), // JSON object
+  notes: text("notes"),
+  completedAt: timestamp("completedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Order = typeof orders.$inferSelect;
+export type InsertOrder = typeof orders.$inferInsert;
+
+// Order Items (line items in an order)
+export const orderItems = mysqlTable("orderItems", {
+  id: int("id").autoincrement().primaryKey(),
+  orderId: int("orderId").notNull(),
+  productId: int("productId").notNull(),
+  quantity: int("quantity").notNull(),
+  unitPrice: int("unitPrice").notNull(), // in cents
+  totalPrice: int("totalPrice").notNull(), // in cents
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type OrderItem = typeof orderItems.$inferSelect;
+export type InsertOrderItem = typeof orderItems.$inferInsert;
+
+// Invoices
+export const invoices = mysqlTable("invoices", {
+  id: int("id").autoincrement().primaryKey(),
+  orderId: int("orderId").notNull().unique(),
+  invoiceNumber: varchar("invoiceNumber", { length: 50 }).notNull().unique(),
+  pdfUrl: varchar("pdfUrl", { length: 512 }),
+  status: mysqlEnum("status", ["draft", "sent", "viewed", "paid"]).default("draft"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Invoice = typeof invoices.$inferSelect;
+export type InsertInvoice = typeof invoices.$inferInsert;

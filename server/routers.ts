@@ -15,8 +15,13 @@ import {
   getBuyerProfile,
   getCertifications,
   getDb,
+  getOrderById,
+  getOrderItems,
+  getUserOrders,
+  createOrder,
+  updateOrderStatus,
 } from "./db";
-import { rfqInquiries, buyerProfiles } from "../drizzle/schema";
+import { rfqInquiries, buyerProfiles, orders } from "../drizzle/schema";
 
 export const appRouter = router({
   system: systemRouter,
@@ -129,6 +134,108 @@ export const appRouter = router({
     list: publicProcedure.query(async () => {
       return getCertifications();
     }),
+  }),
+
+  // Payment routes
+  payments: router({
+    createCheckoutSession: protectedProcedure
+      .input(z.object({
+        items: z.array(z.object({
+          productId: z.number(),
+          quantity: z.number().min(1),
+          unitPrice: z.number().min(0),
+        })),
+        shippingAddress: z.object({
+          country: z.string(),
+          city: z.string().optional(),
+          postalCode: z.string().optional(),
+        }).optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const Stripe = (await import("stripe")).default;
+        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "");
+        
+        try {
+          // Calculate total
+          const totalAmount = input.items.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
+          
+          // Create order in database first
+          const order = await createOrder({
+            userId: ctx.user.id,
+            status: "pending",
+            totalAmount: Math.round(totalAmount * 100), // Convert to cents
+            currency: "USD",
+            items: JSON.stringify(input.items),
+            customerEmail: ctx.user.email || "",
+            customerName: ctx.user.name || "",
+            shippingAddress: input.shippingAddress ? JSON.stringify(input.shippingAddress) : undefined,
+          });
+
+          if (!order) {
+            throw new Error("Failed to create order");
+          }
+
+          // Create Stripe checkout session
+          const session = await stripe.checkout.sessions.create({
+            payment_method_types: ["card"],
+            line_items: input.items.map(item => ({
+              price_data: {
+                currency: "usd",
+                product_data: {
+                  name: `Product Order - Qty: ${item.quantity}`,
+                },
+                unit_amount: Math.round(item.unitPrice * 100),
+              },
+              quantity: item.quantity,
+            })),
+            mode: "payment",
+            success_url: `${ctx.req.headers.origin}/orders/${order.id}?status=success`,
+            cancel_url: `${ctx.req.headers.origin}/checkout?status=cancelled`,
+            customer_email: ctx.user.email || undefined,
+            client_reference_id: ctx.user.id.toString(),
+            metadata: {
+              user_id: ctx.user.id.toString(),
+              order_id: order.id.toString(),
+              customer_email: ctx.user.email || "",
+              customer_name: ctx.user.name || "",
+            },
+            allow_promotion_codes: true,
+          });
+
+          // Update order with Stripe session ID
+          const db = await getDb();
+          if (db) {
+            await db.update(orders).set({ stripeSessionId: session.id }).where(eq(orders.id, order.id));
+          }
+
+          return {
+            sessionId: session.id,
+            sessionUrl: session.url,
+            orderId: order.id,
+          };
+        } catch (error) {
+          console.error("[Stripe] Error creating checkout session:", error);
+          throw new Error("Failed to create checkout session");
+        }
+      }),
+
+    getOrderDetails: protectedProcedure
+      .input(z.number())
+      .query(async ({ ctx, input: orderId }) => {
+        const order = await getOrderById(orderId);
+        
+        if (!order || order.userId !== ctx.user.id) {
+          throw new Error("Order not found or unauthorized");
+        }
+
+        const items = await getOrderItems(orderId);
+        return { order, items };
+      }),
+
+    getUserOrders: protectedProcedure
+      .query(async ({ ctx }) => {
+        return getUserOrders(ctx.user.id);
+      }),
   }),
 });
 

@@ -1,6 +1,31 @@
 import { eq, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { 
+  InsertUser, 
+  users,
+  categories, 
+  products, 
+  pricingTiers, 
+  rfqInquiries, 
+  buyerProfiles,
+  certifications,
+  orders,
+  orderItems,
+  invoices,
+  type User,
+  type Product,
+  type Category,
+  type PricingTier,
+  type RfqInquiry,
+  type BuyerProfile,
+  type Certification,
+  type Order,
+  type InsertOrder,
+  type OrderItem,
+  type InsertOrderItem,
+  type Invoice,
+  type InsertInvoice
+} from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,23 +114,6 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
-
-import { 
-  categories, 
-  products, 
-  pricingTiers, 
-  rfqInquiries, 
-  buyerProfiles,
-  certifications,
-  type Product,
-  type Category,
-  type PricingTier,
-  type RfqInquiry,
-  type BuyerProfile,
-  type Certification
-} from "../drizzle/schema";
-
 // Product queries
 export async function getProductsByCategory(categoryId: number): Promise<Product[]> {
   const db = await getDb();
@@ -167,4 +175,70 @@ export async function getCertifications(): Promise<Certification[]> {
   const db = await getDb();
   if (!db) return [];
   return db.select().from(certifications);
+}
+
+// Order queries
+export async function createOrder(order: InsertOrder): Promise<Order | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  try {
+    await db.insert(orders).values(order);
+    const result = await db.select().from(orders).where(eq(orders.userId, order.userId)).orderBy(orders.id).limit(1);
+    return result.length > 0 ? result[0] : undefined;
+  } catch (error) {
+    console.error("[Database] Failed to create order:", error);
+    return undefined;
+  }
+}
+
+export async function getOrderById(orderId: number): Promise<Order | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getOrderByStripeSessionId(sessionId: string): Promise<Order | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(orders).where(eq(orders.stripeSessionId, sessionId)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getUserOrders(userId: number): Promise<Order[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(orders).where(eq(orders.userId, userId));
+}
+
+export async function updateOrderStatus(orderId: number, status: string): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(orders).set({ status: status as any, updatedAt: new Date() }).where(eq(orders.id, orderId));
+}
+
+export async function updateOrderByStripeSessionId(sessionId: string, updates: Partial<Order>): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(orders).set(updates).where(eq(orders.stripeSessionId, sessionId));
+}
+
+// Order Items queries
+export async function createOrderItem(item: InsertOrderItem): Promise<OrderItem | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  try {
+    await db.insert(orderItems).values(item);
+    const result = await db.select().from(orderItems).where(eq(orderItems.orderId, item.orderId)).limit(1);
+    return result.length > 0 ? result[0] : undefined;
+  } catch (error) {
+    console.error("[Database] Failed to create order item:", error);
+    return undefined;
+  }
+}
+
+export async function getOrderItems(orderId: number): Promise<OrderItem[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(orderItems).where(eq(orderItems.orderId, orderId));
 }

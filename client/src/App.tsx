@@ -9,6 +9,8 @@ import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
 import RFQ from "./pages/RFQ";
 import Certifications from "./pages/Certifications";
+import Checkout from "./pages/Checkout";
+import Orders from "./pages/Orders";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -19,6 +21,9 @@ function Router() {
       <Route path={"/products/:slug"} component={ProductDetail} />
       <Route path={"/rfq"} component={RFQ} />
       <Route path={"/certifications"} component={Certifications} />
+      <Route path={"/checkout"} component={Checkout} />
+      <Route path={"/orders/:orderId"} component={Orders} />
+      <Route path={"/orders"} component={Orders} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
