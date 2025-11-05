@@ -332,19 +332,19 @@ export default function Home() {
         <div className="container mx-auto">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
-              <h4 className="font-semibold text-white mb-4">About Us</h4>
-              <p className="text-sm">Leading B2B wholesale supplier of surplus goods from Dongguan, China.</p>
+              <h4 className="font-semibold text-white mb-4">{t("footer.about", language)}</h4>
+              <p className="text-sm">{t("footer.aboutText", language)}</p>
             </div>
             <div>
-              <h4 className="font-semibold text-white mb-4">Quick Links</h4>
+              <h4 className="font-semibold text-white mb-4">{t("footer.quickLinks", language)}</h4>
               <ul className="text-sm space-y-2">
-                <li><Link href="/products" className="hover:text-white">Products</Link></li>
-                <li><Link href="/about" className="hover:text-white">About</Link></li>
-                <li><Link href="/contact" className="hover:text-white">Contact</Link></li>
+                <li><Link href="/products" className="hover:text-white">{t("nav.products", language)}</Link></li>
+                <li><Link href="/about" className="hover:text-white">{t("nav.about", language)}</Link></li>
+                <li><Link href="/contact" className="hover:text-white">{t("nav.contact", language)}</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold text-white mb-4">Support</h4>
+              <h4 className="font-semibold text-white mb-4">{t("footer.support", language)}</h4>
               <ul className="text-sm space-y-2">
                 <li><Link href="/faq" className="hover:text-white">FAQ</Link></li>
                 <li><Link href="/shipping" className="hover:text-white">Shipping Info</Link></li>
@@ -352,14 +352,14 @@ export default function Home() {
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold text-white mb-4">Contact</h4>
-              <p className="text-sm">Email: info@b2bwholesale.com</p>
-              <p className="text-sm">Phone: +86 769 1234 5678</p>
-              <p className="text-sm">Location: Dongguan, China</p>
+              <h4 className="font-semibold text-white mb-4">{t("footer.contact", language)}</h4>
+              <p className="text-sm">{t("footer.email", language)}</p>
+              <p className="text-sm">{t("footer.phone", language)}</p>
+              <p className="text-sm">{t("footer.location", language)}</p>
             </div>
           </div>
           <div className="border-t border-slate-700 pt-8 text-center text-sm">
-            <p>&copy; 2024 B2B Wholesale Surplus Goods. All rights reserved.</p>
+            <p>{t("footer.copyright", language)}</p>
           </div>
         </div>
       </footer>
