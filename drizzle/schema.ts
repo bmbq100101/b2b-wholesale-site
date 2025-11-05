@@ -379,3 +379,71 @@ export const faqSearchIndex = mysqlTable("faqSearchIndex", {
 
 export type FaqSearchIndex = typeof faqSearchIndex.$inferSelect;
 export type InsertFaqSearchIndex = typeof faqSearchIndex.$inferInsert;
+
+
+// Sample Request System
+export const sampleRequests = mysqlTable("sampleRequests", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  productId: int("productId").notNull(),
+  quantity: int("quantity").notNull().default(1),
+  status: mysqlEnum("status", ["pending", "approved", "shipped", "delivered", "rejected"]).default("pending").notNull(),
+  requestDate: timestamp("requestDate").defaultNow().notNull(),
+  approvalDate: timestamp("approvalDate"),
+  shippingDate: timestamp("shippingDate"),
+  deliveryDate: timestamp("deliveryDate"),
+  trackingNumber: varchar("trackingNumber", { length: 100 }),
+  notes: text("notes"),
+  piNumber: varchar("piNumber", { length: 50 }), // Proforma Invoice number
+  shippingAddress: text("shippingAddress"), // JSON
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SampleRequest = typeof sampleRequests.$inferSelect;
+export type InsertSampleRequest = typeof sampleRequests.$inferInsert;
+
+// Proforma Invoice (PI) - Auto-generated for sample requests
+export const proformaInvoices = mysqlTable("proformaInvoices", {
+  id: int("id").autoincrement().primaryKey(),
+  piNumber: varchar("piNumber", { length: 50 }).notNull().unique(),
+  sampleRequestId: int("sampleRequestId").notNull(),
+  userId: int("userId").notNull(),
+  productId: int("productId").notNull(),
+  quantity: int("quantity").notNull(),
+  unitPrice: int("unitPrice").notNull(), // in cents
+  totalAmount: int("totalAmount").notNull(), // in cents
+  currency: varchar("currency", { length: 3 }).default("USD").notNull(),
+  issueDate: timestamp("issueDate").defaultNow().notNull(),
+  dueDate: timestamp("dueDate"),
+  status: mysqlEnum("status", ["draft", "issued", "accepted", "rejected", "paid"]).default("issued").notNull(),
+  paymentTerms: varchar("paymentTerms", { length: 100 }),
+  deliveryTerms: varchar("deliveryTerms", { length: 100 }),
+  notes: text("notes"),
+  pdfUrl: varchar("pdfUrl", { length: 500 }), // URL to generated PDF
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ProformaInvoice = typeof proformaInvoices.$inferSelect;
+export type InsertProformaInvoice = typeof proformaInvoices.$inferInsert;
+
+// Shipping Labels - Auto-generated for shipped samples
+export const shippingLabels = mysqlTable("shippingLabels", {
+  id: int("id").autoincrement().primaryKey(),
+  labelNumber: varchar("labelNumber", { length: 50 }).notNull().unique(),
+  sampleRequestId: int("sampleRequestId").notNull(),
+  trackingNumber: varchar("trackingNumber", { length: 100 }).notNull(),
+  carrier: varchar("carrier", { length: 50 }).notNull(), // DHL, FedEx, UPS, etc.
+  shippingMethod: varchar("shippingMethod", { length: 50 }).notNull(), // Express, Standard, etc.
+  weight: int("weight"), // in grams
+  dimensions: varchar("dimensions", { length: 100 }), // LxWxH
+  estimatedDelivery: timestamp("estimatedDelivery"),
+  actualDelivery: timestamp("actualDelivery"),
+  cost: int("cost"), // in cents
+  pdfUrl: varchar("pdfUrl", { length: 500 }), // URL to generated PDF
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ShippingLabel = typeof shippingLabels.$inferSelect;
+export type InsertShippingLabel = typeof shippingLabels.$inferInsert;

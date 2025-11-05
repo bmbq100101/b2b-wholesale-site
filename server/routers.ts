@@ -950,6 +950,95 @@ export const appRouter = router({
         };
       }),
   }),
+
+  // Tariff Calculator
+  tariffs: router({
+    calculate: publicProcedure
+      .input(z.object({
+        productValue: z.number().min(0),
+        countryCode: z.string(),
+        currency: z.string().optional(),
+      }))
+      .query(async ({ input }) => {
+        const { calculateTariff } = await import("./tariff-calculator-service");
+        try {
+          const result = calculateTariff(input.productValue, input.countryCode, input.currency);
+          return result;
+        } catch (error) {
+          return { error: (error as Error).message };
+        }
+      }),
+
+    calculateBulk: publicProcedure
+      .input(z.object({
+        items: z.array(z.object({
+          productValue: z.number().min(0),
+          quantity: z.number().min(1),
+        })),
+        countryCode: z.string(),
+        currency: z.string().optional(),
+      }))
+      .query(async ({ input }) => {
+        const { calculateBulkTariff } = await import("./tariff-calculator-service");
+        try {
+          const result = calculateBulkTariff(input.items, input.countryCode, input.currency);
+          return result;
+        } catch (error) {
+          return { error: (error as Error).message };
+        }
+      }),
+
+    getAvailableCountries: publicProcedure
+      .query(async () => {
+        const { getAvailableCountries } = await import("./tariff-calculator-service");
+        return getAvailableCountries();
+      }),
+
+    compareTariffs: publicProcedure
+      .input(z.object({
+        productValue: z.number().min(0),
+        countryCodes: z.array(z.string()),
+        currency: z.string().optional(),
+      }))
+      .query(async ({ input }) => {
+        const { compareTariffs } = await import("./tariff-calculator-service");
+        return compareTariffs(input.productValue, input.countryCodes, input.currency);
+      }),
+
+    getSummary: publicProcedure
+      .input(z.object({
+        countryCode: z.string(),
+      }))
+      .query(async ({ input }) => {
+        const { getTariffSummary } = await import("./tariff-calculator-service");
+        try {
+          return getTariffSummary(input.countryCode);
+        } catch (error) {
+          return { error: (error as Error).message };
+        }
+      }),
+
+    estimateFinalPrice: publicProcedure
+      .input(z.object({
+        productValue: z.number().min(0),
+        countryCode: z.string(),
+        shippingCost: z.number().optional(),
+        currency: z.string().optional(),
+      }))
+      .query(async ({ input }) => {
+        const { estimateFinalPrice } = await import("./tariff-calculator-service");
+        try {
+          return estimateFinalPrice(
+            input.productValue,
+            input.countryCode,
+            input.shippingCost,
+            input.currency
+          );
+        } catch (error) {
+          return { error: (error as Error).message };
+        }
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

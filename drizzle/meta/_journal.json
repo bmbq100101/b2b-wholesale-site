@@ -50,6 +50,13 @@
       "when": 1762348244711,
       "tag": "0006_nosy_squadron_supreme",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1762349833991,
+      "tag": "0007_daily_deathbird",
+      "breakpoints": true
     }
   ]
 }
