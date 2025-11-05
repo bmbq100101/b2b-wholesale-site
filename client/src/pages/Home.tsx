@@ -6,11 +6,48 @@ import { APP_LOGO, APP_TITLE, getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { ArrowRight, CheckCircle, Globe, Shield, Zap, Users, Package, TrendingUp } from "lucide-react";
 import { Link } from "wouter";
+import { HeroCarousel } from "@/components/HeroCarousel";
 
 export default function Home() {
   const { user, isAuthenticated } = useAuth();
   const { data: featuredProducts = [] } = trpc.products.featured.useQuery();
   const { data: categories = [] } = trpc.categories.list.useQuery();
+
+  const heroSlides = [
+    {
+      id: "slide-1",
+      type: "image" as const,
+      url: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1920&h=1080&fit=crop",
+      title: "Premium Surplus Goods from Dongguan",
+      subtitle: "Direct wholesale supplier of stock digital products, brand small appliances, home kitchen supplies, and cleaning products",
+      cta: {
+        text: "Browse Products",
+        href: "/products",
+      },
+    },
+    {
+      id: "slide-2",
+      type: "image" as const,
+      url: "https://images.unsplash.com/photo-1557821552-17105176677c?w=1920&h=1080&fit=crop",
+      title: "Competitive Wholesale Pricing",
+      subtitle: "Best rates for bulk orders with flexible MOQ options",
+      cta: {
+        text: "Request Quote",
+        href: "/bulk-quote-request",
+      },
+    },
+    {
+      id: "slide-3",
+      type: "image" as const,
+      url: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=1920&h=1080&fit=crop",
+      title: "Global Shipping & Logistics",
+      subtitle: "Fast and reliable delivery to 50+ countries worldwide",
+      cta: {
+        text: "Learn More",
+        href: "/about",
+      },
+    },
+  ];
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-slate-50 to-white">
@@ -53,6 +90,9 @@ export default function Home() {
           </div>
         </div>
       </header>
+
+      {/* Hero Carousel */}
+      <HeroCarousel slides={heroSlides} autoPlay={true} autoPlayInterval={5000} />
 
       {/* Hero Section */}
       <section className="py-20 px-4 bg-gradient-to-r from-blue-600 to-blue-800 text-white">

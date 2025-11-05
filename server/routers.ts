@@ -791,6 +791,165 @@ export const appRouter = router({
         return item || { error: "Failed to create FAQ item" };
       }),
   }),
+
+  // Social Media Sharing
+  sharing: router({
+    generateShareUrls: publicProcedure
+      .input(z.object({
+        productId: z.number(),
+        productName: z.string(),
+        productSlug: z.string(),
+        description: z.string().optional(),
+      }))
+      .query(async ({ input }) => {
+        const { generateShareUrls, generateMetaTags } = await import("./social-sharing-service");
+        const baseUrl = "https://b2b-wholesale.example.com"; // Replace with actual domain
+        
+        const shareUrls = generateShareUrls(
+          {
+            id: input.productId,
+            name: input.productName,
+            slug: input.productSlug,
+            description: input.description,
+            basePrice: 0,
+            sku: "",
+          },
+          baseUrl
+        );
+
+        const metaTags = generateMetaTags(
+          {
+            id: input.productId,
+            name: input.productName,
+            slug: input.productSlug,
+            description: input.description,
+            basePrice: 0,
+            sku: "",
+          },
+          baseUrl
+        );
+
+        return { shareUrls, metaTags };
+      }),
+
+    trackShare: publicProcedure
+      .input(z.object({
+        productId: z.number(),
+        platform: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        // Track social share events for analytics
+        console.log(`[Share Tracking] Product ${input.productId} shared on ${input.platform}`);
+        return { success: true };
+      }),
+
+    generateEmailTemplate: publicProcedure
+      .input(z.object({
+        productId: z.number(),
+        productName: z.string(),
+        productSlug: z.string(),
+        description: z.string().optional(),
+        sku: z.string().optional(),
+        basePrice: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        const { generateEmailTemplate } = await import("./social-sharing-service");
+        const baseUrl = "https://b2b-wholesale.example.com"; // Replace with actual domain
+        
+        const template = generateEmailTemplate(
+          {
+            id: input.productId,
+            name: input.productName,
+            slug: input.productSlug,
+            description: input.description,
+            basePrice: input.basePrice || 0,
+            sku: input.sku || "",
+          },
+          baseUrl
+        );
+
+        return template;
+      }),
+  }),
+
+  // Multi-Region Payment Methods
+  multiPayments: router({
+    getRegionPaymentMethods: publicProcedure
+      .input(z.object({
+        countryCode: z.string(),
+        amount: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        const { getRegionAndCurrency, getRecommendedPaymentMethods } = await import("./multi-payment-service");
+        const { region, currency, methods } = getRegionAndCurrency(input.countryCode);
+
+        if (input.amount) {
+          const recommended = getRecommendedPaymentMethods(region, input.amount);
+          return { region, currency, methods, recommended };
+        }
+
+        return { region, currency, methods };
+      }),
+
+    getPaymentMethodDetails: publicProcedure
+      .input(z.object({
+        method: z.string(),
+      }))
+      .query(async ({ input }) => {
+        const { getPaymentMethodDetails } = await import("./multi-payment-service");
+        try {
+          const details = getPaymentMethodDetails(input.method as any);
+          return details;
+        } catch {
+          return { error: "Invalid payment method" };
+        }
+      }),
+
+    calculatePaymentTotal: publicProcedure
+      .input(z.object({
+        amount: z.number(),
+        method: z.string(),
+      }))
+      .query(async ({ input }) => {
+        const { calculateTotalWithFees, validatePaymentAmount } = await import("./multi-payment-service");
+        const validation = validatePaymentAmount(input.amount, input.method as any);
+
+        if (!validation.valid) {
+          return { error: validation.error };
+        }
+
+        const breakdown = calculateTotalWithFees(input.amount, input.method as any);
+        return breakdown;
+      }),
+
+    initializePayment: protectedProcedure
+      .input(z.object({
+        orderId: z.string(),
+        amount: z.number(),
+        currency: z.string(),
+        method: z.string(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { generatePaymentPayload } = await import("./multi-payment-service");
+
+        const payload = generatePaymentPayload(
+          input.orderId,
+          input.amount,
+          input.currency,
+          input.method as any,
+          ctx.user?.email || ""
+        );
+
+        // In production, this would initialize the actual payment gateway
+        console.log("[Payment] Initializing payment:", payload);
+
+        return {
+          success: true,
+          paymentId: `pay_${Date.now()}`,
+          payload,
+        };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;
