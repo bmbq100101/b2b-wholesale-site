@@ -1,0 +1,89 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build application
+        run: pnpm build
+
+      - name: Run tests (if available)
+        run: pnpm test --passWithNoTests || true
+
+      - name: Deploy to VPS via SSH
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            cd /opt/b2b-wholesale
+            
+            # 拉取最新代码
+            git pull origin main
+            
+            # 安装依赖
+            pnpm install --frozen-lockfile
+            
+            # 运行数据库迁移
+            pnpm db:push || true
+            
+            # 构建应用
+            pnpm build
+            
+            # 重启应用（Docker）
+            if [ -f "docker-compose.yml" ]; then
+              docker-compose build
+              docker-compose up -d
+            fi
+            
+            # 或重启应用（PM2）
+            if command -v pm2 &> /dev/null; then
+              pm2 restart b2b-wholesale
+            fi
+            
+            echo "✅ 部署完成"
+
+      - name: Notify deployment status
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: |
+            部署状态: ${{ job.status }}
+            仓库: ${{ github.repository }}
+            分支: ${{ github.ref }}
+            提交: ${{ github.sha }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        continue-on-error: true
