@@ -1,10 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Award, Building2, Users, TrendingUp, Globe } from "lucide-react";
+import NavigationHeader from "@/components/NavigationHeader";
 
 export default function Certifications() {
   return (
     <div className="min-h-screen bg-slate-50">
+      <NavigationHeader />
       {/* Header */}
       <div className="bg-white border-b border-slate-200">
         <div className="container mx-auto px-4 py-12">

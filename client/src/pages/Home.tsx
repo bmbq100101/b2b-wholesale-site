@@ -1,17 +1,18 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { APP_LOGO, APP_TITLE, getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
-import { ArrowRight, CheckCircle, Globe, Shield, Zap, Users, Package, TrendingUp, ShoppingCart } from "lucide-react";
+import { ArrowRight, CheckCircle, Globe, Shield, Zap, Users, Package, TrendingUp } from "lucide-react";
 import { Link } from "wouter";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { useLanguage, t } from "@/components/LanguageSwitcher";
+import NavigationHeader from "@/components/NavigationHeader";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { getLoginUrl } from "@/const";
 
 export default function Home() {
   const language = useLanguage();
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const { data: featuredProducts = [] } = trpc.products.featured.useQuery();
   const { data: categories = [] } = trpc.categories.list.useQuery();
 
@@ -54,50 +55,7 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-slate-50 to-white">
       {/* Navigation Header */}
-      <header className="border-b border-slate-200 bg-white sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {APP_LOGO && <img src={APP_LOGO} alt="Logo" className="h-10 w-10" />}
-            <h1 className="text-2xl font-bold text-slate-900">{APP_TITLE}</h1>
-          </div>
-          <nav className="hidden md:flex items-center gap-8">
-            <Link href="/products" className="text-slate-600 hover:text-slate-900 font-medium">
-              {t("nav.products", language)}
-            </Link>
-            <Link href="/about" className="text-slate-600 hover:text-slate-900 font-medium">
-              {t("nav.about", language)}
-            </Link>
-            <Link href="/certifications" className="text-slate-600 hover:text-slate-900 font-medium">
-              {t("nav.certifications", language)}
-            </Link>
-            <Link href="/contact" className="text-slate-600 hover:text-slate-900 font-medium">
-              {t("nav.contact", language)}
-            </Link>
-          </nav>
-          <div className="flex items-center gap-4">
-            {isAuthenticated ? (
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-slate-600">{user?.name || "User"}</span>
-                <Link href="/cart">
-                  <Button variant="ghost" size="sm" className="gap-2">
-                    <ShoppingCart className="w-4 h-4" />
-                    Cart
-                  </Button>
-                </Link>
-                <Link href="/dashboard">
-                  <Button variant="outline" size="sm">
-                    {t("nav.dashboard", language)}
-                  </Button>
-                </Link>
-              </div>
-            ) : (
-              <a href={getLoginUrl()}>
-                <Button size="sm">Sign In</Button>
-              </a>
-            )}
-          </div>
-        </div>
-      </header>
+      <NavigationHeader />
 
       {/* Hero Carousel */}
       <HeroCarousel slides={heroSlides} autoPlay={true} autoPlayInterval={5000} />

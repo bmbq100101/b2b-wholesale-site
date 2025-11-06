@@ -7,6 +7,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { FileText, Download, CheckCircle, Clock, XCircle, AlertCircle } from "lucide-react";
 import { Link } from "wouter";
+import NavigationHeader from "@/components/NavigationHeader";
 
 export default function QuoteManagement() {
   const { isAuthenticated } = useAuth();
@@ -34,13 +35,16 @@ export default function QuoteManagement() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
-        <div className="text-center">
-          <FileText className="w-16 h-16 text-slate-400 mx-auto mb-4" />
-          <p className="text-slate-600 text-lg mb-4">Please sign in to manage your quotes</p>
-          <a href={getLoginUrl()}>
-            <Button>Sign In</Button>
-          </a>
+      <div className="min-h-screen bg-slate-50">
+        <NavigationHeader />
+        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)]">
+          <div className="text-center">
+            <FileText className="w-16 h-16 text-slate-400 mx-auto mb-4" />
+            <p className="text-slate-600 text-lg mb-4">Please sign in to manage your quotes</p>
+            <a href={getLoginUrl()}>
+              <Button>Sign In</Button>
+            </a>
+          </div>
         </div>
       </div>
     );
@@ -82,6 +86,7 @@ export default function QuoteManagement() {
 
     return (
       <div className="min-h-screen bg-slate-50">
+        <NavigationHeader />
         {/* Header */}
         <div className="bg-white border-b border-slate-200">
           <div className="container mx-auto px-4 py-6">
@@ -293,6 +298,7 @@ export default function QuoteManagement() {
   // Show quotes list
   return (
     <div className="min-h-screen bg-slate-50">
+      <NavigationHeader />
       {/* Header */}
       <div className="bg-white border-b border-slate-200">
         <div className="container mx-auto px-4 py-8">

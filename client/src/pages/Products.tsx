@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { trpc } from "@/lib/trpc";
 import { Link } from "wouter";
 import { Search, Filter, Grid3x3, List, ChevronDown } from "lucide-react";
+import NavigationHeader from "@/components/NavigationHeader";
 
 export default function Products() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -41,6 +42,7 @@ export default function Products() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      <NavigationHeader />
       {/* Header */}
       <div className="bg-white border-b border-slate-200 sticky top-0 z-40">
         <div className="container mx-auto px-4 py-6">

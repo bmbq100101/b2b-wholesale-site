@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertCircle, CheckCircle, Shield, Cookie, FileText, Lock } from "lucide-react";
 import { Link } from "wouter";
+import NavigationHeader from "@/components/NavigationHeader";
 
 export default function Legal() {
   const [cookiePreferences, setCookiePreferences] = useState({
@@ -26,10 +27,12 @@ export default function Legal() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white py-12 px-4">
-      <div className="container mx-auto max-w-4xl">
-        {/* Header */}
-        <div className="mb-12">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+      <NavigationHeader />
+      <div className="py-12 px-4">
+        <div className="container mx-auto max-w-4xl">
+          {/* Header */}
+          <div className="mb-12">
           <h1 className="text-4xl font-bold text-slate-900 mb-4">Legal & Compliance</h1>
           <p className="text-lg text-slate-600">
             We are committed to protecting your privacy and ensuring compliance with international regulations.
@@ -380,9 +383,10 @@ export default function Legal() {
         </Card>
 
         {/* Last Updated */}
-        <div className="mt-8 text-center text-sm text-slate-500">
-          <p>Last updated: November 2024</p>
-          <p>These policies are effective immediately and will remain in effect unless and until modified by us.</p>
+          <div className="mt-8 text-center text-sm text-slate-500">
+            <p>Last updated: November 2024</p>
+            <p>These policies are effective immediately and will remain in effect unless and until modified by us.</p>
+          </div>
         </div>
       </div>
     </div>

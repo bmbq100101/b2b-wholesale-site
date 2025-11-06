@@ -9,6 +9,7 @@ import { getLoginUrl } from "@/const";
 import { Plus, Trash2, AlertCircle, CheckCircle, Loader2 } from "lucide-react";
 import { Link } from "wouter";
 import LiveChat from "@/components/LiveChat";
+import NavigationHeader from "@/components/NavigationHeader";
 
 interface QuoteItem {
   productId: number;
@@ -99,6 +100,7 @@ export default function BulkQuoteRequest() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      <NavigationHeader />
       {/* Header */}
       <div className="bg-white border-b border-slate-200">
         <div className="container mx-auto px-4 py-8">

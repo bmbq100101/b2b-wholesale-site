@@ -9,6 +9,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { ArrowLeft, ShoppingCart, FileText, Truck, Shield } from "lucide-react";
 import { Link, useLocation } from "wouter";
+import NavigationHeader from "@/components/NavigationHeader";
 
 export default function ProductDetail() {
   const [, params] = useRoute("/products/:slug");
@@ -47,8 +48,11 @@ export default function ProductDetail() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <p className="text-slate-600">Loading product details...</p>
+      <div className="min-h-screen bg-slate-50">
+        <NavigationHeader />
+        <div className="flex items-center justify-center min-h-[calc(100vh-80px)]">
+          <p className="text-slate-600">Loading product details...</p>
+        </div>
       </div>
     );
   }
@@ -83,6 +87,7 @@ export default function ProductDetail() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      <NavigationHeader />
       {/* Header */}
       <div className="bg-white border-b border-slate-200">
         <div className="container mx-auto px-4 py-4">

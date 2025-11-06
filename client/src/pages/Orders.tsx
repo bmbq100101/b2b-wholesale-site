@@ -1,4 +1,4 @@
-import { useRoute } from "wouter";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -6,7 +6,8 @@ import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { Package, ArrowLeft, CheckCircle, Clock, XCircle, Download } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useRoute } from "wouter";
+import NavigationHeader from "@/components/NavigationHeader";;
 
 export default function Orders() {
   const { isAuthenticated } = useAuth();
@@ -23,13 +24,16 @@ export default function Orders() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
-        <div className="text-center">
-          <Package className="w-16 h-16 text-slate-400 mx-auto mb-4" />
-          <p className="text-slate-600 text-lg mb-4">Please sign in to view your orders</p>
-          <a href={getLoginUrl()}>
-            <Button>Sign In</Button>
-          </a>
+      <div className="min-h-screen bg-slate-50">
+        <NavigationHeader />
+        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)]">
+          <div className="text-center">
+            <Package className="w-16 h-16 text-slate-400 mx-auto mb-4" />
+            <p className="text-slate-600 text-lg mb-4">Please sign in to view your orders</p>
+            <a href={getLoginUrl()}>
+              <Button>Sign In</Button>
+            </a>
+          </div>
         </div>
       </div>
     );
@@ -42,6 +46,7 @@ export default function Orders() {
 
     return (
       <div className="min-h-screen bg-slate-50">
+        <NavigationHeader />
         {/* Header */}
         <div className="bg-white border-b border-slate-200">
           <div className="container mx-auto px-4 py-6">
@@ -201,6 +206,7 @@ export default function Orders() {
   // Show orders list
   return (
     <div className="min-h-screen bg-slate-50">
+      <NavigationHeader />
       {/* Header */}
       <div className="bg-white border-b border-slate-200">
         <div className="container mx-auto px-4 py-8">
