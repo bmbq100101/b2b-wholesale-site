@@ -86,7 +86,7 @@ jobs:
             # 查看日志
             docker-compose logs --tail=20 app
             
-            echo "✅ Docker 部署完成"
+            echo "✅ Docker 部署  完成"
 
       - name: Verify deployment
         uses: appleboy/ssh-action@master
