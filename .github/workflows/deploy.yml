@@ -23,7 +23,7 @@ jobs:
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}
-          PROJECT_DIR: /root/b2b-wholesale-site-main # 使用 root 用户的主目录
+          PROJECT_DIR: /root/b2b-wholesale-site-main # 使用 root 用户的主  1目录
         run: |
           # 1. 确保目标目录存在
           ssh -o StrictHostKeyChecking=no ${SSH_USER}@${SSH_HOST} "mkdir -p ${PROJECT_DIR}"
