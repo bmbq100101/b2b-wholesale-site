@@ -8,7 +8,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: production # 可选：用于环境隔离和密钥管理
+    environment: production # 可选：用于环境隔离和 密钥管理
 
     steps:
       - name: Checkout code
